@@ -1,0 +1,28 @@
+ R←Test_Misc_020(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;okayFlag;counter;tempFilename;parms
+⍝ Start a process with setting paramaters "WorkspaceName" and "CommandLineArgs"
+ ⎕IO←1 ⋄ ⎕ML←1
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ tempFilename←##.FilesAndDirs.GetTempFilename2''
+ parms←##.APLProcess.CreateParms
+ parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\Test.dws'
+ parms.CommandLineArgs←'file="',tempFilename,'"'
+⍝ parms.SessionFile←1
+ :If 0
+     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+ :EndIf
+ P←⎕NEW ##.APLProcess parms
+ okayFlag←counter←0
+
+ :Repeat
+     :If ##.FilesAndDirs.IsFile tempFilename
+         ⎕DL 0.5
+     :Else
+         okayFlag←1
+     :EndIf
+ :Until okayFlag∨20<counter←counter+1
+ →T.PassesIf okayFlag
+
+ R←T._OK
+⍝Done
