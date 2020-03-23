@@ -4,7 +4,7 @@
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._OK
  report←''
- rf←##.APLProcess
+ rf←#.APLProcess
 
  buff←rf T.FindSpecialString'⍝CHECK⍝'
  buff←(buff[;0]≢¨⎕XSI[0])⌿buff ⍝ remove caller

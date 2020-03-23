@@ -1,3 +1,9 @@
 # APLProcess
 
 This class is useful in case you need to fire up another APL session, for example for test cases.
+
+By default the same version is instanciated `APLProcess` is running in. This can be changed by creating a parameter space, making the necessary adjustments and then pass this space as an argument to the constructor.
+
+Instead you can also pass a simple text vector to the constructor. This can be uses to specify a workspace name and parameters like "MAXWS" and the likes. However, you **cannot** specify "session_file" this way.
+
+By default the instance does not have a session file (DSE).

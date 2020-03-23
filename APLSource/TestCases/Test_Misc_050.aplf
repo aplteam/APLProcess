@@ -1,0 +1,45 @@
+ R←Test_Misc_050(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;P;Conga;rc;more;port;answer;connectionName;buff;msg;runningVersion;bat;shouldBeVersion
+⍝ Start a process with the oldest supported runtime version of Dyalog.
+⍝ What's oldest version is established from the Make/make.bat file in the current directory.
+⍝ The workspace is then asked via Conga.
+⍝ See also Test_Misc_040 which checks the same but with a very different approach.
+ ⎕IO←1 ⋄ ⎕ML←1
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ port←9921
+ connectionName←'C1'
+ parms←##.APLProcess.CreateParms
+ parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\RPC.dws'
+ parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
+ bat←'flat'##.APLTreeUtils.ReadUtf8File'Make\make.bat'
+ shouldBeVersion←⊃(//)⎕VFI⊃' [0-9]{2,}\.[0-9]{1,} '⎕S{⍵.Match}⊣bat
+ parms.Exe←((-≢'dyalog.exe')↓'"'~⍨{⍵/⍨{⍵∨≠\⍵}⍵='"'}bat),'dyalogrt.exe'
+ :If 0
+     parms.Exe←''
+     parms.SessionFile←1
+     parms.CommandLineArgs,←' -x'               ⍝ For debugging the workspace that will be run
+ :EndIf
+ P←⎕NEW ##.APLProcess parms
+ Conga←⎕NS''
+ (↑'Conga' 'DRC')Conga.⎕CY'Conga'
+ :Repeat
+     (rc msg more)←3↑Conga.DRC.Init''
+ :Until 1043≠rc
+ Assert rc=0
+
+ (rc more)←2↑Conga.DRC.Clt connectionName'localhost'port'Command'
+ Assert 0=rc
+ (rc more)←2↑Conga.DRC.Send connectionName'Version'
+ answer←5 ∆Wait connectionName 3
+ Assert 0<≢answer
+ (rc more)←2↑Conga.DRC.Send connectionName'Shutdown'
+ Assert 0=rc
+ {}Conga.DRC.Close connectionName
+ runningVersion←⊃(//)⎕VFI{⍵/⍨2>+\'.'=⍵}2⊃(⎕UCS 13)##.APLTreeUtils.Split answer
+ →T.PassesIf shouldBeVersion≡runningVersion
+ ⎕DL 0.2
+ →T.PassesIf P.HasExited
+
+ R←T._OK
+⍝Done

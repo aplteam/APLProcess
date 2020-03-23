@@ -1,0 +1,19 @@
+ r←{max}∆Wait(name sec);done;counter;rc;more;event;data
+ ⍝ Wait `sec` seconds for answer for `max` times. `max` defaults to 5.
+ ⍝ In case of no answer `⍬` is returned, otherwise it will be a text vector: the answer provided.
+ r←⍬
+ done←0
+ max←{0<⎕NC'max':⍎⍵ ⋄ 5}'max'
+ counter←0
+ :Repeat
+     (rc more event data)←4↑Conga.DRC.Wait name(1000×sec)
+     :If rc=100 ⍝ Timeout
+         counter+←1
+     :Else
+         Assert event≡'Receive'
+         Assert rc=0
+         r←data
+         done←1
+     :EndIf
+ :Until done∨max<counter
+⍝Done

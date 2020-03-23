@@ -22,4 +22,7 @@
  →T.PassesIf okayFlag
 
  R←T._OK
+
+∆TidyUp:
+ ##.FilesAndDirs.DeleteFile tempFilename
 ⍝Done

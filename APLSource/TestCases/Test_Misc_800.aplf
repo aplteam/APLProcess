@@ -1,0 +1,38 @@
+ R←Test_Misc_800(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;port;connectionName;parms;qdmx;rc;msg;more;Conga
+⍝ Test properties and methods
+ ⎕IO←1 ⋄ ⎕ML←1
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ port←9921
+ connectionName←'C1'
+ parms←##.APLProcess.CreateParms
+ parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\RPC.dws'  ⍝ Just
+ parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
+ :If 0
+     parms.SessionFile←1
+     parms.CommandLineArgs,←' -x'               ⍝ For debugging the workspace that will be run
+ :EndIf
+ P←⎕NEW ##.APLProcess parms
+ →T.PassesIf 1=P.IsWin+P.IsMacOS+P.IsUnix
+ →T.PassesIf parms.CommandLineArgs≡P.Args
+ →T.PassesIf P.WindowsStyleDefault≡P.WindowsStyle
+ :Trap 2
+     P.WindowsStyle←'Normal'
+     →T.FailsIf 1
+ :Else
+     qdmx←⎕DMX
+     →T.PassesIf∨/'P.WindowsStyle←''Normal'''⍷∊qdmx.DM
+ :EndTrap
+
+ →T.PassesIf 0<≢P.Exe
+ →T.PassesIf P.Args≡parms.CommandLineArgs
+ →T.PassesIf parms.WorkspaceName≡P.WorkspaceName
+ →T.PassesIf 0=P.RunTime
+ →T.PassesIf 0=P.HasExited
+ rc←P.Kill P.GetPID
+ ⎕DL 0.1
+ →T.PassesIf 1=P.HasExited
+
+ R←T._OK
+⍝Done

@@ -1,0 +1,38 @@
+ R←Test_Misc_030(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;okayFlag;counter;parms;content;tempFilename;expected
+⍝ Start a process with setting the "LogFilename" paramater.
+⍝ We should find the content defined as "File=" in that log file.
+⍝ For that the WS to be loaded will write what's assign to "write2log" and then write
+⍝ the log to the file specified in the "file=" parameter
+ ⎕IO←1 ⋄ ⎕ML←1
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._Failed
+
+ parms←##.APLProcess.CreateParms
+ parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\Log.dws'
+ parms.CommandLineArgs←'write2log="To be written to the APL log file"'
+ tempFilename←##.FilesAndDirs.GetTempFilename2''
+ parms.CommandLineArgs,←' file="',tempFilename,'"'
+ parms.LogFilename←##.FilesAndDirs.GetTempFilename2''
+ :If 0
+     parms.SessionFile←1
+     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+ :EndIf
+ P←⎕NEW ##.APLProcess parms
+ okayFlag←counter←0
+
+ :Repeat
+     :If ~##.FilesAndDirs.IsFile tempFilename
+     :OrIf 0=≢content←##.APLTreeUtils.ReadUtf8File tempFilename
+         ⎕DL 0.5
+     :Else
+         expected←1↓{⍵/⍨2>+\'"'=⍵}(≢'write2log=')↓parms.CommandLineArgs
+         okayFlag←∨/∨/expected⍷∊content
+     :EndIf
+ :Until okayFlag∨20<counter←counter+1
+ →T.PassesIf okayFlag
+
+ R←T._OK
+
+∆TidyUp:
+ ##.FilesAndDirs.DeleteFile parms.LogFilename tempFilename
+⍝Done

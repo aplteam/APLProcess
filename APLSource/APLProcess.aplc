@@ -4,64 +4,62 @@
 ⍝ created from defines which version of APL will be started, be it
 ⍝ development or runtime.\\
 ⍝ Of course you can change that by first creating a parameter space
-⍝ by calling `CreateParms` and the making necessary adjustment,\\
+⍝ by calling `CreateParms` and then making necessary adjustment,\\
 ⍝ Instead of passing a parameter space to the constructor you can
 ⍝ also pass a simple text vector, specifying a workspace and possibly
 ⍝ other command line parameters like, say, MAXWS=32GB and the like.\\
-⍝ Note: ssh support under Windows will require Renci.SshNet.dll once
-⍝ implemented
+⍝ Note that this class is designed for test cases that require one or
+⍝ more additional instances of APL for some reason. For that reason
+⍝ it does not offer encryption for a RIDE.\\
+⍝ Note that the destructor of this class will attempt to kill the
+⍝ process that was started.
 
     ⎕IO←1 ⋄ ⎕ML←1
-    _port←9627
 
     :Include APLTreeUtils
 
-    :Field Public Instance Args←''
-    :Field Public Instance Ws←''
-    :Field Public Instance Exe←''
-    :Field Public Instance Proc←⎕NS ''
-    :Field Public Instance onExit←''
-    :Field Public Instance RunTime←0    ⍝ Boolean or name of runtime executable
-    :Field Public Instance Platform
-    :Field Public Instance IsWin
-    :Field Public Instance IsMac
-    :Field Public Instance IsSsh
+    ∇ r←Version
+    ⍝ See also `History`
+      :Access Public Shared
+      r←'APLProcess' '0.2.0.6' '2020-03-23'
+    ∇
+
+    ∇ History
+      :Access Public Shared
+    ⍝ * 0.2.0 from 2020-03-23
+    ⍝   * File extension changed from .DYALOG to .APLC
+    ⍝ * 0.1.2 from 2020-01-30
+    ⍝   * Bug fix: `WaitForKill` can run into a timing issue
+    ⍝ * 0.1.1 from 2020-01-29
+    ⍝   * Bug fix in `Start`
+    ⍝ * 0.1.0 from 2020-01-12
+    ⍝   * First version (Windows only)
+    ∇
+
+    :Field Public Instance Args←''              ⍝ Why....
+    :Field Public Instance WorkspaceName←''     ⍝ ...is...
+    :Field Public Instance Exe←''               ⍝ ...this...
+    :Field Public Instance Proc←⎕NS ''          ⍝ ... not ADOCed?!
+    :Field Public Instance RunTime←0            ⍝ Boolean or name of runtime executable
+    :Field Public Instance IsWin                ⍝ This
+    :Field Public Instance IsMacOS              ⍝ That
+    ⍝ And more
 
     :Field Public Shared WindowsStyleDefault←'Minimized'  ⍝ Only test cases should change this. As a consumer of this class use the Property "WindowsStyle"
+
+    :Property IsUnix
+    :Access Public Instance
+        ∇ r←get
+          r←0=IsWin+IsMacOS
+        ∇
+    :EndProperty
 
     :Property WindowsStyle
     :Access Public Instance
         ∇ r←get
           r←_WindowsStyle
         ∇
-        ∇ set arg
-          ∘∘∘
-          _WindowsStyle←
-        ∇
     :EndProperty
-
-    :Property PortWindowsStyle
-    :Access Public Shared
-        ∇ r←get
-          r←_port
-        ∇
-        ∇ set arg
-          ∘∘∘
-          _port←
-        ∇
-    :EndProperty
-
-    ∇ r←Version
-    ⍝ See also `History`
-      :Access Public Shared
-      r←'APLProcess' '0.1.0' '2020-01-12'
-    ∇
-
-    ∇ History
-      :Access Public Shared
-    ⍝ * 0.1.0 from 2020-01-12
-    ⍝   * First version (Windows only)
-    ∇
 
     ∇ make
       :Access public instance
@@ -72,9 +70,9 @@
     ∇ make1 y;commandline;parmSpace;rt;cmd;ws;windowStyle;buff
       :Access Public Instance
       :Implements Constructor
-      ⍝ `y` becomes either `parmspace` (if it is a namespace) or `commandline` (if it is a text vector.
+      ⍝ `y` becomes either `parmspace` (if it is a namespace) or `commandline` (if it is a text vector).
       ⍝ `parmSpace` is a parameter namespace, usually created by calling `CreateParms`; see there.
-      ⍝ `commandline` is a text vector the is passed on the command line, like workspace name maxws= etc.
+      ⍝ `commandline` is a text vector the is passed on the command line, like workspace name, maxws= etc.
       make_common
       :If 2=⎕NC'y'
       :AndIf (≡y)∊0 1
@@ -101,63 +99,59 @@
           parmSpace.CommandLineArgs←1↓⊃,/' ',¨buff
       :EndIf
       'Invalid window style'⎕SIGNAL 11/⍨~(⊂parmSpace.WindowsStyle)∊'Hidden' 'Maximized' 'Minimized' 'Normal'
-      (RIDE_INIT OUT_FILE Wa Args)←parmSpace.(RideInit LogFilename WorkspaceName CommandLineArgs)
+      (RIDE_INIT OUT_FILE WorkspaceName Args)←parmSpace.(RideInit LogFilename WorkspaceName CommandLineArgs)
       PATH←SourcePath
       Start parmSpace
     ∇
 
-    ∇ make_common
+    ∇ make_common;Platform
       Platform←⊃#.⎕WG'APLVersion'
       IsWin←'Win'≡3↑Platform
-      IsMac←'Mac'≡3↑Platform
-      IsSsh←0
+      IsMacOS←'Mac'≡3↑Platform
       _WindowsStyle←WindowsStyleDefault
     ∇
 
     ∇ Run
       :Access Public Instance
-      Start(Ws Args RunTime)
+      Start(WorkspaceName Args RunTime)
     ∇
 
-    ∇ Start ps;psi;pid;cmd;host;port;keyfile;exe;z;output;args;Exe
+    ∇ Start ps;psi;pid;cmd;host;port;keyfile;exe;z;output;args
+      :If 0=≢ps.Exe
+          ps.Exe←(GetRunTimeName⍣ps.RunTime)GetCurrentExecutable ⍝ else, deduce it
+      :EndIf
+      Exe←ps.Exe
       args←ps.CommandLineArgs
       args,←(0≠≢RIDE_INIT)/' RIDE_INIT="',RIDE_INIT,'" RIDE_SPAWNED=1 '
-      :If (,0)≡,ps.SessionFile
-          args,←' session_file="" '
-      :ElseIf (,1)≡,ps.SessionFile
-          args,←' session_file="',GetDefaultDseFilename,'" '
-      :ElseIf ' '=1↑0⍴ps.SessionFile
-          args,←' session_file="',ps.SessionFile,'" '
-      :Else
-          'Invalid parameter: "SessionFile"'⎕SIGNAL 11
+      :If ~ps.RunTime
+          :If (,0)≡,ps.SessionFile
+              ⍝ The following can be replace by   session_file=""   once 17.1 is the latest supported version:
+              args,←' session_file="This_certainly_does_not_exist" '
+          :ElseIf (,1)≡,ps.SessionFile
+              ps.SessionFile←GetDefaultDseFilename ps.Exe
+              args,←' session_file="',ps.SessionFile,'" '
+          :ElseIf ' '=1↑0⍴ps.SessionFile
+              args,←' session_file="',ps.SessionFile,'" '
+          :Else
+              'Invalid parameter: "SessionFile"'⎕SIGNAL 11
+          :EndIf
       :EndIf
+      args,←(0<≢ps.LogFilename)/' LOG_FILE="',ps.LogFilename,'" '
       ⍝ NB Always set RIDE_INIT to override current process setting
-      :If ~0 2 6∊⍨10|⎕DR ps.Exe ⍝ if rt is character or nested, it defines what to start
-          Exe←(RunTimeName⍣ps.Exe)GetCurrentExecutable ⍝ else, deduce it
-      :Else
-          Exe←ps.Exe
-          ps.Exe←0
-      :EndIf
-      :If IsWin∧~IsSsh←326=⎕DR Exe
+      :If IsWin
           ⎕USING←'System,System.dll'
-          psi←⎕NEW Diagnostics.ProcessStartInfo,⊂Exe(ps.WorkspaceName,' ',args)
+          psi←⎕NEW Diagnostics.ProcessStartInfo,⊂ps.Exe(({0=≢⍵:⍵ ⋄ '"',(⍵~'"'),'" '}ps.WorkspaceName),args)
           psi.WindowStyle←Diagnostics.ProcessWindowStyle.⍎ps.WindowsStyle
           Proc←Diagnostics.Process.Start psi
       :Else ⍝ Unix
           :If ~∨/'LOG_FILE'⍷args            ⍝ By default...
               args,←' LOG_FILE=/dev/nul '   ⍝ ... no log file
           :EndIf
-          :If IsSsh
-              (host port keyfile exe)←Exe
-              cmd←args,' ',exe,' +s -q ',ws
-              Proc←SshProc host port keyfile cmd
-          :Else
-              z←⍕GetCurrentProcessId
-              output←(1+×≢OUT_FILE)⊃'/dev/null'OUT_FILE
-              pid←_SH'{ ',args,' ',Exe,' +s -q ',ws,' -c APLppid=',z,' 0<&- 1>',output,' 2>&1 & } ; echo $!'
-              Proc.Id←pid
-              Proc.HasExited←HasExited
-          :EndIf
+          z←⍕GetCurrentProcessId
+          output←(1+×≢OUT_FILE)⊃'/dev/null'OUT_FILE
+          pid←_SH'{ ',args,' ',ps.Exe,' +s -q ',ws,' -c APLppid=',z,' 0<&- 1>',output,' 2>&1 & } ; echo $!'
+          Proc.Id←pid
+          Proc.HasExited←HasExited
           Proc.StartTime←⎕NEW Time ⎕TS
       :EndIf
     ∇
@@ -174,17 +168,19 @@
     ⍝ | Name           | Description |
     ⍝ |----------------|-------------|
     ⍝ | CommandLineArg | By default empty. Optinal command line parameters passed to `Exe`. |
-    ⍝ | Exe            | Defaults to 0 which means that the same EXE is executed the instance was created from. 1 means same version but the runtime. Can also be a fully qualified name of the exe to be executed. |
+    ⍝ | Exe            | Defaults to '' which means that the same EXE is executed the instance was created from. 1 means same version but the runtime. Can also be a fully qualified name of the exe to be executed. |
     ⍝ | LogFilename    | By default empty, meaning that any output is thrown away. If this is specified it is expected to be the name of a file|
     ⍝ | RideInit       | By default empty. Is passed as RIDE_INIT. |
+    ⍝ | RunTime        | Boolean that defaults to 0. Is ignored in case `Exe` is not empty.
     ⍝ | SessionFile    | Defaults to 0 which means no session file is loaded. A 1 will load the default DSE file. May also be the fully qualified path to a DSE file. ||
     ⍝ | WindowStyle    | Default to "Minimized". May be "Hidden" or "Maximized"or "Normal" instead. Case sensitive. |
     ⍝ | WorkspaceName  | By default empty; the fully qualified name of the workspace to be loaded. |
       r←⎕NS''
       r.CommandLineArgs←''
-      r.Exe←0
+      r.Exe←''
       r.LogFilename←''
       r.RideInit←''
+      r.RunTime←0
       r.SessionFile←0
       r.WindowsStyle←WindowsStyleDefault
       r.WorkspaceName←''
@@ -192,34 +188,21 @@
     ∇
 
     ∇ WaitForKill(limit interval);count
-      :If (0≠≢onExit)∧~HasExited ⍝ If the process is still alive
-          :Trap 0
-              ⍎onExit
+      :If 0<≢Proc.⎕NL-2
+          :If ~Proc.HasExited
+              count←0
+              :While ~Proc.HasExited
+                  {}⎕DL interval
+                  count←count+1
+              :Until count>limit
+          :EndIf ⍝ OK, have it your own way
+          :Trap 11
+              {}Kill Proc.Id
           :EndTrap
-          count←0
-          :While ~HasExited
-              {}⎕DL interval
-              count←count+1
-          :Until count>limit
-      :EndIf ⍝ OK, have it your own way
-      {}Kill Proc
-    ∇
-
-    ∇ r←GetCurrentProcessId;t;IsWin;IsMac;IsSsh;Platform
-      :Access Public Shared
-      make_common
-      :If IsWin
-          r←⍎'t'⎕NA'U4 kernel32|GetCurrentProcessId'
-      :ElseIf IsSsh
-          r←Proc.Pid
-      :Else
-          r←tonum⊃_SH'echo $PPID'
       :EndIf
     ∇
 
-    ∇ r←GetCurrentExecutable;⎕USING;t;gmfn;IsWin;IsMac;IsSsh;Platform
-      :Access Public Shared
-      make_common
+    ∇ r←GetCurrentExecutable;⎕USING;t;gmfn
       :If IsWin
           r←''
           'gmfn'⎕NA'U4 kernel32|GetModuleFileName* P =T[] U4'
@@ -230,8 +213,6 @@
               r←r,(~(¯1↑r)∊'\/')/'/' ⍝ Add separator if necessary
               r←r,(Diagnostics.Process.GetCurrentProcess.ProcessName),'.exe'
           :EndIf
-      :ElseIf IsSsh
-          ∘∘∘ ⍝ Not supported
       :Else
           t←⊃_PS'-o args -p ',⍕GetCurrentProcessId ⍝ AWS
           :If '"'''∊⍨⊃t  ⍝ if command begins with ' or "
@@ -242,7 +223,7 @@
       :EndIf
     ∇
 
-    ∇ r←RunTimeName exe
+    ∇ r←GetRunTimeName exe
     ⍝ Assumes that:
     ⍝ Windows runtime ends in "rt.exe"
     ⍝ *NIX runtime ends in ".rt"
@@ -257,355 +238,41 @@
     ∇
 
 
-    ∇ r←KillChildren Exe;kids;⎕USING;p;m;i;mask
-      :Access Public Shared
-      ⍝ returns [;1] pid [;2] process name of any processes that were not killed
-      r←0 2⍴0 ''
-      :If 0≠≢kids←ListProcesses Exe ⍝ All child processes using the exe
-          :If IsWin
-              ⎕USING←'System,system.dll'
-              p←Diagnostics.Process.GetProcessById¨kids[;1]
-              p.Kill
-              ⎕DL 1
-              :If 0≠⍴p←(~p.HasExited)/p
-                  ⎕DL 1
-                  p.Kill
-                  ⎕DL 1
-                  :If ∨/m←~p.HasExited
-                      r←(kids[;1]∊m/p.Id)⌿kids
-                  :EndIf
-              :EndIf
-          :ElseIf IsSsh
-              ∘∘∘
-          :Else
-              mask←(⍬⍴⍴kids)⍴0
-              :For i :In ⍳⍴mask
-                  mask[i]←Shoot kids[i;1]
-              :EndFor
-              r←(~mask)⌿kids
-          :EndIf
-      :EndIf
-    ∇
-
-    ∇ r←{all}ListProcesses procName;me;⎕USING;procs;unames;names;name;i;pn;kid;parent;mask;n
-      :Access Public Shared
-    ⍝ returns either my child processes or all processes
-    ⍝ procName is either '' for all children, or the name of a process
-    ⍝ r[;1] - child process number (Id)
-    ⍝ r[;2] - child process name
-      me←GetCurrentProcessId
-      r←0 2⍴0 ''
-      procName←,procName
-      all←{6::⍵ ⋄ all}0 ⍝ default to just my childen
-      :If IsWin
-          ⎕USING←'System,system.dll'
-          :If 0=≢procName ⋄ procs←Diagnostics.Process.GetProcesses''
-          :Else ⋄ procs←Diagnostics.Process.GetProcessesByName⊂procName ⋄ :EndIf
-          :If all
-              r←↑procs.(Id ProcessName)
-              r⌿⍨←r[;1]≠me
-          :Else
-              :If 0<⍴procs
-                  unames←∪names←procs.ProcessName
-                  :For name :In unames
-                      :For i :In ⍳n←1+.=(,⊂name)⍳names
-                          pn←name,(n≠1)/'#',⍕i
-                          :Trap 0/0 ⍝ trap here just in case a process disappeared before we get to it; BUT NOT WITH 0!! (Kai)
-                              parent←⎕NEW Diagnostics.PerformanceCounter('Process' 'Creating Process Id'pn)
-                              :If me=parent.NextValue
-                                  kid←⎕NEW Diagnostics.PerformanceCounter('Process' 'Id Process'pn)
-                                  r⍪←(kid.NextValue)name
-                              :EndIf
-                          :EndTrap
-                      :EndFor
-                  :EndFor
-              :EndIf
-          :EndIf
-      :ElseIf IsSsh
-          ∘∘∘  ⍝ not implemented yet
-      :Else ⍝ Linux
-      ⍝ unfortunately, Ubuntu (and perhaps others) report the PPID of tasks started via ⎕SH as 1
-      ⍝ so, the best we can do at this point is identify processes that we tagged with ppid=
-          mask←' '∧.=procs←' ',↑_PS'-eo pid,cmd',((~all)/' | grep APLppid=',(⍕GetCurrentProcessId)),(0<⍴procName)/' | grep ',procName,' | grep -v grep' ⍝ AWS
-          mask∧←2≥+\mask
-          procs←↓¨mask⊂procs
-          mask←me≠tonum¨1⊃procs ⍝ remove my task
-          procs←mask∘/¨procs[1 2]
-          mask←1
-          :If 0<⍴procName
-              mask←∨/¨(procName,' ')∘⍷¨(2⊃procs),¨' '
-          :EndIf
-          mask>←∨/¨'grep '∘⍷¨2⊃procs ⍝ remove procs that are for the searches
-          procs←mask∘/¨procs
-          r←↑[0.1]procs
-      :EndIf
-    ∇
-
-    ∇ r←Kill;delay;qdmx;exception;killed
-      :Access Public Instance
-      r←killed←0
-      delay←0.1
-      :Trap 6
-          :If IsWin
-              :Trap 90
-                  Proc.Kill
-                  killed←1
-              :Else
-                  qdmx←⎕DMX
-                  exception←⎕EXCEPTION
-                  :If ∨/'Cannot process request because the process has exited'⍷exception.Message
-                      killed←1
-                  :Else
-                      exception.Message ⎕SIGNAL qdmx.EN
-                  :EndIf
-              :EndTrap
-              :Repeat
-                  ⎕DL delay×~killed
-                  delay+←delay
-              :Until (delay>10)∨Proc.HasExited
-          :ElseIf IsSsh
-              ∘∘∘ ⍝ Not yet implemented
-          :Else ⍝ Local UNIX
-              {}UNIXIssueKill 3 Proc.Id ⍝ issue strong interrupt
-              {}⎕DL 2 ⍝ wait a couple seconds for it to react
-              :If ~Proc.HasExited←~UNIXIsRunning Proc.Id
-                  {}UNIXIssueKill 9 Proc.Id ⍝ issue strong interrupt
-                  {}⎕DL 2 ⍝ wait a couple seconds for it to react
-              :AndIf ~Proc.HasExited←~UNIXIsRunning Proc.Id
-                  :Repeat
-                      ⎕DL delay
-                      delay+←delay
-                  :Until (delay>10)∨Proc.HasExited~UNIXIsRunning Proc.Id
-              :EndIf
-          :EndIf
-          r←Proc.HasExited
-      :EndTrap
-    ∇
-
-    ∇ r←Shoot Proc;MAX;res
-      MAX←100
-      r←0
-      :If 0≠⎕NC⊂'Proc.HasExited'
-          :Repeat
-              :If ~Proc.HasExited
-                  :If IsWin
-                      Proc.Kill
-                      ⎕DL 0.2
-                  :ElseIf IsSsh
-                      ∘∘∘  ⍝ Not implemented yet
-                  :Else
-                      {}UNIXIssueKill 3 Proc.Id ⍝ issue strong interrupt AWS
-                      {}⎕DL 2 ⍝ wait a couple seconds for it to react
-                      :If ~Proc.HasExited←0=≢res←UNIXGetShortCmd Proc.Id       ⍝ AWS
-                          Proc.HasExited∨←∨/'<defunct>'⍷⊃,/res
-                      :EndIf
-                  :EndIf
-              :EndIf
-              MAX-←1
-          :Until Proc.HasExited∨MAX≤0
-          r←Proc.HasExited
-      :ElseIf 2=⎕NC'Proc' ⍝ just a process id?
-          {}UNIXIssueKill 9 Proc.Id
-          {}⎕DL 2
-          r←~UNIXIsRunning Proc.Id  ⍝ AWS
-      :EndIf
-    ∇
-
     ∇ r←HasExited
-      :Access public instance
-      :If IsWin∨IsSsh
-          r←{6::⍵ ⋄ Proc.HasExited}1
-      :Else
-          r←~UNIXIsRunning Proc.Id ⍝ AWS
-      :EndIf
+      :Access Public Instance
+      r←Proc.HasExited
     ∇
 
-    ∇ r←IsRunning args;⎕USING;start;exe;pid;proc;diff;res
-      :Access public shared
-      ⍝ args - pid {exe} {startTS}
+    ∇ r←GetPID
+      :Access Public Instance
+      r←Proc.Id
+    ∇
+
+    ∇ {r}←Kill pid;proc;qdmx
+      :Access Public Instance
+    ⍝ Attempts to stop the process with processID pid.\\
+    ⍝ `r` is 0 in case the process could not be stopped, including when it is not running anyway.,
+    ⍝ otherwise it is 1.
       r←0
-      args←⊆args
-      (pid exe start)←3↑args,(⍴args)↓0 ''⍬
       :If IsWin
           ⎕USING←'System,system.dll'
-          :Trap 0
+          :Trap 90
               proc←Diagnostics.Process.GetProcessById pid
-              r←1
           :Else
-              :Return
-          :EndTrap
-          :If ''≢exe
-              r∧←exe≡proc.ProcessName
-          :EndIf
-          :If ⍬≢start
-              :Trap 90
-                  diff←|-/#.DFSUtils.DateToIDN¨start(proc.StartTime.(Year Month Day Hour Minute Second Millisecond))
-                  r∧←diff≤24 60 60 1000⊥0 1 0 0÷×/24 60 60 1000 ⍝ consider it a match within a 1 minute window
+              qdmx←⎕DMX
+              :If ('Process with an Id of ',(⍕pid),' is not running.')≢⎕EXCEPTION.Message
+              :AndIf ('because the process (',(⍕pid),') has exited.')≢⎕EXCEPTION.Message
+                  ⎕EXCEPTION.Message ⎕SIGNAL 11
               :Else
-                  r←0
-              :EndTrap
-          :EndIf
-      :ElseIf IsSsh
-          ∘∘∘
-      :Else
-          r←UNIXIsRunning pid
-      :EndIf
-    ∇
-
-    ∇ r←Stop pid;proc
-      :Access public shared
-    ⍝ attempts to stop the process with processID pid
-      :If IsWin
-          ⎕USING←'System,system.dll'
-          :Trap 0
-              proc←Diagnostics.Process.GetProcessById pid
-          :Else
-              r←1
-              :Return
+                  :Return
+              :EndIf
           :EndTrap
           proc.Kill
-          {}⎕DL 0.5
-          r←~##.APLProcess.IsRunning pid
-      :ElseIf IsSsh
-          ∘∘∘
+          r←1
       :ElseIf
-          {}UNIXIssueKill 3 pid ⍝ issue strong interrupt
+          {}UNIX_IssueKill 3 pid ⍝ issue strong interrupt
+          r←1
       :EndIf
-    ∇
-
-    ∇ r←UNIXIsRunning pid;txt
-    ⍝ Return 1 if the process is in the process table and is not a defunct
-      r←0
-      →(r←' '∨.≠txt←UNIXGetShortCmd pid)↓0
-      r←~∨/'<defunct>'⍷txt
-    ∇
-
-    ∇ {r}←UNIXIssueKill(signal pid)
-      signal pid←⍕¨signal pid
-      cmd←'kill -',signal,' ',pid,' >/dev/null 2>&1 ; echo $?'
-      :If IsSsh
-          ∘∘∘
-      :Else
-          r←⎕SH cmd
-      :EndIf
-    ∇
-
-    ∇ r←UNIXGetShortCmd pid;cmd
-      ⍝ Retrieve sort form of cmd used to start process <pid>
-      cmd←(1+IsMac)⊃'cmd' 'command'
-      cmd←'ps -o ',cmd,' -p ',(⍕pid),' 2>/dev/null ; exit 0'
-      :If IsSsh
-          ∘∘∘
-      :Else
-          r←⊃1↓⎕SH cmd
-      :EndIf
-    ∇
-
-    ∇ r←_PS cmd;ps
-      ps←'ps ',⍨('AIX'≡3↑⊃'.'⎕WG'APLVersion')/'/usr/sysv/bin/'      ⍝ Must use this ps on AIX
-      r←1↓⎕SH ps,cmd,' 2>/dev/null; exit 0'                         ⍝ Remove header line
-    ∇
-
-    ∇ r←{quietly}_SH cmd
-      :Access public shared
-      quietly←{6::⍵ ⋄ quietly}0
-      :If quietly
-          cmd←cmd,' </dev/null 2>&1'
-      :EndIf
-      r←{0::'' ⋄ ⎕SH ⍵}cmd
-    ∇
-
-    :Class Time
-        :Field Public Year
-        :Field Public Month
-        :Field Public Day
-        :Field Public Hour
-        :Field Public Minute
-        :Field Public Second
-        :Field Public Millisecond
-
-        ∇ make ts
-          :Implements Constructor
-          :Access Public
-          ∘∘∘ ⍝ Do we neeed this? (Kai)  ⍝TODO⍝
-          (Year Month Day Hour Minute Second Millisecond)←7↑ts
-          ⎕DF(⍕¯2↑'00',⍕Day),'-',((12 3⍴'JanFebMarAprMayJunJulAugSepOctNovDec')[⍬⍴Month;]),'-',(⍕100|Year),' ',1↓⊃,/{':',¯2↑'00',⍕⍵}¨Hour Minute Second
-        ∇
-
-    :EndClass
-
-    ∇ r←ProcessUsingPort port;t
-    ⍝ return the process ID of the process (if any) using a port
-      :Access public shared
-      r←⍬
-      :If IsWin
-          :If 0≠≢t←_SH'netstat -a -n -o'
-          :AndIf 0≠≢t/⍨←∨/¨'LISTENING'∘⍷¨t
-          :AndIf 0≠≢t/⍨←∨/¨((':',⍕port),' ')∘⍷¨t
-              r←∪∊¯1↑¨(//)∘⎕VFI¨t
-          :EndIf
-      :Else
-          :If 0≠≢t←_SH'netstat -l -n -p 2>/dev/null | grep '':',(⍕port),' '''
-              r←∪∊{⊃(//)⎕VFI{(∧\⍵∊⎕D)/⍵}⊃¯1↑{⎕ML←3 ⋄ (' '≠⍵)⊂⍵}⍵}¨t
-          :EndIf
-      :EndIf
-    ∇
-
-    ∇ r←MyDNSName;GCN;IsWin;IsSsh;IsMac;Platform
-      :Access Public Shared
-      make_common ⍝ because this method is shared
-      :If IsWin
-          'GCN'⎕NA'I4 Kernel32|GetComputerNameEx* U4 >0T =U4'
-          r←2⊃GCN 7 255 255
-          :Return
-      ⍝ ComputerNameNetBIOS = 0
-      ⍝ ComputerNameDnsHostname = 1
-      ⍝ ComputerNameDnsDomain = 2
-      ⍝ ComputerNameDnsFullyQualified = 3
-      ⍝ ComputerNamePhysicalNetBIOS = 4
-      ⍝ ComputerNamePhysicalDnsHostname = 5
-      ⍝ ComputerNamePhysicalDnsDomain = 6
-      ⍝ ComputerNamePhysicalDnsFullyQualified = 7 <<<
-      ⍝ ComputerNameMax = 8
-      :ElseIf IsSsh
-          ∘∘∘ ⍝ Not yet supported
-      :Else
-          r←⊃_SH'hostname'
-      :EndIf
-    ∇
-
-    ∇ Proc←SshProc(host user keyfile cmd);conn;z;kf;allpids;guid;listpids;pids;⎕USING;pid;tid
-      ⎕USING←'Renci.SshNet,',PATH,'/Renci.SshNet.dll'
-      kf←⎕NEW PrivateKeyFile(,⊂keyfile)
-      conn←⎕NEW SshClient(host 22 user(,kf))
-      :Trap 0/0  ⍝ Not 0 !!! Kai
-          conn.Connect    ⍝ This is defined to be a void()
-      :Case 90
-          ('Error creating ssh client instance: ',⎕EXCEPTION.Message)⎕SIGNAL 11
-      :Else
-          'Unexpected error creating ssh client instance'⎕SIGNAL 11
-      :EndTrap
-      listpids←{0~⍨2⊃(⎕UCS 10)⎕VFI(conn.RunCommand⊂'ps -u ',user,' | grep dyalog | grep -v grep | awk ''{print $2}''').Result}
-      guid←'dyalog-ssh-',(⍕⎕TS)~' '
-      pids←listpids ⍬
-      Proc←⎕NS''
-      Proc.SshConn←conn
-      Proc.HasExited←0
-      tid←{SshRun conn ⍵ Proc}&⊂cmd
-      Proc.tid←tid
-      ⎕DL 1
-      :If 1=⍴pid←(listpids ⍬)~pids
-          pid←⊃pid
-      :Else
-          ∘∘∘               ⍝ failed to start
-      :EndIf
-      Proc.Pid←pid
-    ∇
-
-    ∇ SshRun(conn cmd proc)
-    ⍝ Wait until APL exits, then set HasExited←1
-      conn.RunCommand cmd
-      proc.HasExited←1
     ∇
 
     ∇ path←SourcePath;source
@@ -622,11 +289,16 @@
       path←{(-⌊/(⌽⍵)⍳'\/')↓⍵}source
     ∇
 
-    ∇ r←GetDefaultDseFilename;wsh
-      r←2 ⎕NQ #'GetEnvironment' 'Session_file'
+    ∇ r←GetDefaultDseFilename exe;name;path
+      name←{⍵↑⍨1+-⌊/(⌽⍵)⍳'/\'}2 ⎕NQ #'GetEnvironment' 'Session_file'
+      path←{⍵↓⍨1+-⌊/(⌽⍵)⍳'/\'}exe
+      r←path,name
     ∇
 
-    endswith←{w←,⍵ ⋄ a←,⍺ ⋄ w≡(-(≢a)⌊≢w)↑a}
-    tonum←{⊃⊃(//)⎕VFI ⍵}
+    ∇ {r}←UNIX_IssueKill(signal pid);cmd
+      signal pid←⍕¨signal pid
+      cmd←'kill -',signal,' ',pid,' >/dev/null 2>&1 ; echo $?'
+      r←⎕SH cmd
+    ∇
 
 :EndClass
