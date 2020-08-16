@@ -1,6 +1,8 @@
 # APLProcess
 
-This class is useful in case you need to fire up another APL session, for example for test cases.
+This class is useful in case you need to fire up another APL session, for example for test cases, or a fully automated "Test & Make" procedure.
+
+The class is designed to run on all major platforms: Windows, Linux and Mac-OS. However, it was tested only on Windows and Linux. 
 
 By default the same version is instanciated `APLProcess` is running in. This can be changed by creating a parameter space, making the necessary adjustments and then pass this space as an argument to the constructor.
 
