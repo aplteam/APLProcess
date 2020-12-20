@@ -12,11 +12,11 @@
  :If 0
      parms.SessionFile←1
      parms.CommandLineArgs,←' -x'               ⍝ For debugging the workspace that will be run
+     parms.WindowsStyle←'Normal'
  :EndIf
  P←⎕NEW ##.APLProcess parms
  →T.PassesIf 1=P.IsWin+P.IsMacOS+P.IsUnix
  →T.PassesIf parms.CommandLineArgs≡P.Args
- →T.PassesIf P.WindowsStyleDefault≡P.WindowsStyle
  :Trap 2
      P.WindowsStyle←'Normal'
      →T.FailsIf 1
@@ -28,7 +28,7 @@
  →T.PassesIf 0<≢P.Exe
  →T.PassesIf P.Args≡parms.CommandLineArgs
  →T.PassesIf parms.WorkspaceName≡P.WorkspaceName
- →T.PassesIf 0=P.RunTime
+ →T.PassesIf 0=P.Runtime
  →T.PassesIf 0=P.HasExited
  rc←P.Kill P.GetPID
  ⎕DL 0.1

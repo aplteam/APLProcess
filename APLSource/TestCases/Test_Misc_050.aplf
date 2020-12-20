@@ -12,13 +12,14 @@
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\RPC.dws'
  parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
- bat←'flat'##.APLTreeUtils.ReadUtf8File'Make\make.bat'
+ bat←⊃##.FilesAndDirs.NGET'Make\make.bat'
  shouldBeVersion←⊃(//)⎕VFI⊃' [0-9]{2,}\.[0-9]{1,} '⎕S{⍵.Match}⊣bat
  parms.Exe←((-≢'dyalog.exe')↓'"'~⍨{⍵/⍨{⍵∨≠\⍵}⍵='"'}bat),'dyalogrt.exe'
  :If 0
      parms.Exe←''
      parms.SessionFile←1
      parms.CommandLineArgs,←' -x'               ⍝ For debugging the workspace that will be run
+     parms.WindowsStyle←'Normal'
  :EndIf
  P←⎕NEW ##.APLProcess parms
  Conga←⎕NS''
@@ -36,7 +37,7 @@
  (rc more)←2↑Conga.DRC.Send connectionName'Shutdown'
  Assert 0=rc
  {}Conga.DRC.Close connectionName
- runningVersion←⊃(//)⎕VFI{⍵/⍨2>+\'.'=⍵}2⊃(⎕UCS 13)##.APLTreeUtils.Split answer
+ runningVersion←⊃(//)⎕VFI{⍵/⍨2>+\'.'=⍵}2⊃(⎕UCS 13)##.APLTreeUtils2.Split answer
  →T.PassesIf shouldBeVersion≡runningVersion
  ⎕DL 0.2
  →T.PassesIf P.HasExited

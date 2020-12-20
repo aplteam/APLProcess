@@ -1,5 +1,5 @@
- R←Test_Misc_020(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;okayFlag;counter;tempFilename;parms
-⍝ Start a process with setting parameters "WorkspaceName" and "CommandLineArgs"
+ R←Test_Misc_022(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;okayFlag;counter;tempFilename;parms
+⍝ Start a process with setting parameters "WorkspaceName" and "CommandLineArgs" but use runtime
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
@@ -8,9 +8,10 @@
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\Test.dws'
  parms.CommandLineArgs←'file="',tempFilename,'"'
+ parms.Runtime←1
  :If 0
      parms.SessionFile←1
-     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run (but its a Runtime!!)
      parms.WindowsStyle←'Normal'
  :EndIf
  P←⎕NEW ##.APLProcess parms

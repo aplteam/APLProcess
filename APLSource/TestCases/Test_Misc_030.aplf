@@ -1,5 +1,5 @@
  R←Test_Misc_030(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;okayFlag;counter;parms;content;tempFilename;expected
-⍝ Start a process with setting the "LogFilename" paramater.
+⍝ Start a process with setting the "LogFilename" parameter.
 ⍝ We should find the content defined as "File=" in that log file.
 ⍝ For that the WS to be loaded will write what's assign to "write2log" and then write
 ⍝ the log to the file specified in the "file=" parameter
@@ -16,13 +16,14 @@
  :If 0
      parms.SessionFile←1
      parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+     parms.WindowsStyle←'Normal'
  :EndIf
  P←⎕NEW ##.APLProcess parms
  okayFlag←counter←0
 
  :Repeat
      :If ~##.FilesAndDirs.IsFile tempFilename
-     :OrIf 0=≢content←##.APLTreeUtils.ReadUtf8File tempFilename
+     :OrIf 0=≢content←⊃##.FilesAndDirs.NGET tempFilename
          ⎕DL 0.5
      :Else
          expected←1↓{⍵/⍨2>+\'"'=⍵}(≢'write2log=')↓parms.CommandLineArgs

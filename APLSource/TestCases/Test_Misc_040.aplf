@@ -1,41 +1,40 @@
- R←Test_Misc_040(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;tempFilename;P;okayFlag;expected;content;remoteVersion;counter
-⍝ Start a process with the oldest supported version of Dyalog.
-⍝ What's oldest version is established from the Make/make.bat file in the current directory.
-⍝ Which version was loaded is established by analyzing the log file which is written by the
-⍝ "Version" workspace to the file specified by the "file=" parameter.
-⍝ See also Test_Misc_050 which checks the same but with a very different approach.
+ R←Test_Misc_040(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms;content;tempFilename;expected;pid;counter;flag
+⍝ Start a process with setting the "Wait" parameter.
+⍝ We do not load a workspace, meaning that the process does not quit itself for sure.
+⍝ We set "Wait" to 3, so after 5 seconds the process could have disappeared, and after 20 it certainly has.
+⍝ the log to the file specified in the "file=" parameter
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\Version.dws'
- parms.Exe←1↓{⍵/⍨2>+\'"'=⍵}1⊃##.APLTreeUtils.ReadUtf8File'Make/Make.bat'
- tempFilename←##.FilesAndDirs.GetTempFilename2''
- parms.CommandLineArgs←'file="',tempFilename,'"'
- parms.LogFilename←##.FilesAndDirs.GetTempFilename2'' ⍝ In order to get a fresh LOG
+ parms.Wait←2
  :If 0
      parms.SessionFile←1
-     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+     parms.WorkspaceName←'DoesNotExistForSure'
+     parms.WindowsStyle←'Normal'
  :EndIf
  P←⎕NEW ##.APLProcess parms
- okayFlag←counter←0
+ ⎕DL 1
+ →T.PassesIf 0=P.Proc.HasExited
+ →T.PassesIf 2=P.Wait
+ P.Wait←3
+ ⎕DL 0.5
+ →T.PassesIf 3=P.Wait
 
+ pid←P.GetPID
+ P.Close
+ ⎕DL 5
+ counter←0
  :Repeat
-     :If ~##.FilesAndDirs.IsFile parms.LogFilename
-     :OrIf 0=≢content←##.APLTreeUtils.ReadUtf8File tempFilename
-         ⎕DL 0.5
+     :If P.HasExited
+         flag←1
      :Else
-         expected←{⍵↑⍨1+-⌊/(⌽⍵)⍳'/\'}¯1↓1⊃⎕NPARTS parms.Exe
-         expected←⊃(//)⎕VFI 3⊃' '##.APLTreeUtils.Split expected
-         remoteVersion←⊃(//)⎕VFI{⍵/⍨2>+\⍵='.'}⊃¯1↑' '##.APLTreeUtils.Split content
-         okayFlag←expected=remoteVersion
+         ⎕DL 1
+         counter+←1
      :EndIf
- :Until okayFlag∨20<counter←counter+1
- →T.PassesIf okayFlag
+ :Until flag∨20<counter
+ →T.PassesIf flag
 
  R←T._OK
-
-∆TidyUp:
- ##.FilesAndDirs.DeleteFile tempFilename parms.LogFilename
 ⍝Done

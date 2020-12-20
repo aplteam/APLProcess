@@ -1,0 +1,1 @@
+{  alias: "",  api: "",  assets: "",  date: "2020-12-19",  description: "Start an APL process from within Dyalog APL",  group: "aplteam",  name: "APLProcess",  project_url: "https://github.com/aplteam/APLProcess",  source: "",  tags: "windows,mac-os,linux,process",  version: "0.3.0",}
