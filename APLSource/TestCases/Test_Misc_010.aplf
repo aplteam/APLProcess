@@ -4,8 +4,8 @@
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
- tempFilename←##.FilesAndDirs.GetTempFilename2''
- cmd←'"',##.FilesAndDirs.PWD,'\Tests\Test.dws" file="',tempFilename,'" '
+ tempFilename←FilesAndDirs.GetTempFilename2''
+ cmd←'"',FilesAndDirs.PWD,'\Tests\Test.dws" file="',tempFilename,'" '
  :If 0
      cmd,←' -x'  ⍝ For debugging the workspace that will be run
  :EndIf
@@ -13,7 +13,7 @@
  okayFlag←counter←0
 
  :Repeat
-     :If ##.FilesAndDirs.IsFile tempFilename
+     :If FilesAndDirs.IsFile tempFilename
          ⎕DL 0.5
      :Else
          okayFlag←1
@@ -24,5 +24,5 @@
  R←T._OK
 
 ∆TidyUp:
- ##.FilesAndDirs.DeleteFile tempFilename
+ FilesAndDirs.DeleteFile tempFilename
 ⍝Done

@@ -8,11 +8,11 @@
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←##.FilesAndDirs.PWD,'\Tests\Log.dws'
+ parms.WorkspaceName←FilesAndDirs.PWD,'\Tests\Log.dws'
  parms.CommandLineArgs←'write2log="To be written to the APL log file"'
- tempFilename←##.FilesAndDirs.GetTempFilename2''
+ tempFilename←FilesAndDirs.GetTempFilename2''
  parms.CommandLineArgs,←' file="',tempFilename,'"'
- parms.LogFilename←##.FilesAndDirs.GetTempFilename2''
+ parms.LogFilename←FilesAndDirs.GetTempFilename2''
  :If 0
      parms.SessionFile←1
      parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
@@ -22,8 +22,8 @@
  okayFlag←counter←0
 
  :Repeat
-     :If ~##.FilesAndDirs.IsFile tempFilename
-     :OrIf 0=≢content←⊃##.FilesAndDirs.NGET tempFilename
+     :If ~FilesAndDirs.IsFile tempFilename
+     :OrIf 0=≢content←⊃FilesAndDirs.NGET tempFilename
          ⎕DL 0.5
      :Else
          expected←1↓{⍵/⍨2>+\'"'=⍵}(≢'write2log=')↓parms.CommandLineArgs
@@ -35,5 +35,5 @@
  R←T._OK
 
 ∆TidyUp:
- ##.FilesAndDirs.DeleteFile parms.LogFilename tempFilename
+ FilesAndDirs.DeleteFile parms.LogFilename tempFilename
 ⍝Done
