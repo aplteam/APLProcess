@@ -1,4 +1,4 @@
- R←Test_Misc_050(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;P;Conga;rc;more;port;answer;connectionName;buff;msg;runningVersion;bat;shouldBeVersion
+ R←Test_Misc_050(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;P;Conga;rc;more;port;answer;connectionName;buff;msg;runningVersion;shouldBeVersion;cfg;b;b2
 ⍝ Start a process with the oldest supported runtime version of Dyalog.
 ⍝ What's oldest version is established from the Make/make.bat file in the current directory.
 ⍝ The workspace is then asked via Conga.
@@ -12,9 +12,14 @@
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←FilesAndDirs.PWD,'\Tests\RPC.dws'
  parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
- bat←⊃FilesAndDirs.NGET'Make\make.bat'
- shouldBeVersion←⊃(//)⎕VFI⊃' [0-9]{2,}\.[0-9]{1,} '⎕S{⍵.Match}⊣bat
- parms.Exe←((-≢'dyalog.exe')↓'"'~⍨{⍵/⍨{⍵∨≠\⍵}⍵='"'}bat),'dyalogrt.exe'
+ cfg←⎕XML⊃FilesAndDirs.NGET'Make\make.config'
+ parms.Exe←3⊃cfg[cfg[;2]⍳⊂'exe';]
+ parms.Exe←'dyalog.exe'⎕R'dyalogrt.exe'⊣parms.Exe
+ shouldBeVersion←⊃(//)⎕VFI⊃' [0-9]{2,}\.[0-9]{1,} '⎕S{⍵.Match}⊣parms.Exe
+ :If ∨/b←cfg[;2]≡¨⊂'parm'
+ :AndIf ∨/b2←'session_file='∘{⍺≡(≢⍺)↑⍵}¨b⌿cfg[;3]
+     parms.SessionFile←⊃(//)⎕VFI(≢'session_file=')↓⊃b2⌿b⌿cfg[;3]
+ :EndIf
  :If 0
      parms.Exe←''
      parms.SessionFile←1

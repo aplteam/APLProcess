@@ -17,7 +17,7 @@
     ∇ r←Version
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.4.0.14' '2021-01-29'
+      r←'APLProcess' '0.4.0.17' '2021-01-29'
     ∇
 
     ∇ History
