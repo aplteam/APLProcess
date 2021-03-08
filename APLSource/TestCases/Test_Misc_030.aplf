@@ -8,11 +8,11 @@
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←FilesAndDirs.PWD,'\Tests\Log.dws'
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash FilesAndDirs.PWD,'\Tests\Log.dws'
  parms.CommandLineArgs←'write2log="To be written to the APL log file"'
- tempFilename←FilesAndDirs.GetTempFilename2''
+ tempFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
  parms.CommandLineArgs,←' file="',tempFilename,'"'
- parms.LogFilename←FilesAndDirs.GetTempFilename2''
+ parms.LogFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
  :If 0
      parms.SessionFile←1
      parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
