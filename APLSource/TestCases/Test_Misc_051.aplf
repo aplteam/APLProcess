@@ -5,7 +5,7 @@
  R←T._Failed
 
  tempFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
- cmd←'"',(FilesAndDirs.EnforceSlash FilesAndDirs.PWD,'\Tests\Test.dws'),'" file="',tempFilename,'" '
+ cmd←'"',(FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'),'" file="',tempFilename,'" '
  :If 0
      cmd,←' -x'  ⍝ For debugging the workspace that will be run
  :EndIf

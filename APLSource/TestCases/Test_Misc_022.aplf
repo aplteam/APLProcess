@@ -6,7 +6,7 @@
 
  tempFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←FilesAndDirs.EnforceSlash FilesAndDirs.PWD,'\Tests\Test.dws'
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'
  parms.CommandLineArgs←'file="',tempFilename,'"'
  parms.Runtime←1
  :If 0

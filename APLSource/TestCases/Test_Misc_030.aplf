@@ -8,7 +8,7 @@
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←FilesAndDirs.EnforceSlash FilesAndDirs.PWD,'\Tests\Log.dws'
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Log.dws'
  parms.CommandLineArgs←'write2log="To be written to the APL log file"'
  tempFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
  parms.CommandLineArgs,←' file="',tempFilename,'"'

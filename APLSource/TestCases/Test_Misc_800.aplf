@@ -7,7 +7,7 @@
  port←9921
  connectionName←'C1'
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←FilesAndDirs.EnforceSlash FilesAndDirs.PWD,'\Tests\RPC.dws'  ⍝ Just
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\RPC.dws'  ⍝ Just
  parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
  :If 0
      parms.SessionFile←1

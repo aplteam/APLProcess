@@ -10,9 +10,9 @@
  port←9921
  connectionName←'C1'
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←FilesAndDirs.EnforceSlash FilesAndDirs.PWD,'\Tests\RPC.dws'
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\RPC.dws'
  parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
- cfg←⎕XML⊃FilesAndDirs.NGET FilesAndDirs.EnforceSlash'Make\make.config'
+ cfg←⎕XML⊃FilesAndDirs.NGET FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'Make\make.config'
  parms.Exe←3⊃cfg[cfg[;2]⍳⊂'exe';]
  parms.Exe←'dyalog.exe'⎕R'dyalogrt.exe'⊣parms.Exe
  shouldBeVersion←⊃(//)⎕VFI⊃' [0-9]{2,}\.[0-9]{1,} '⎕S{⍵.Match}⊣parms.Exe
