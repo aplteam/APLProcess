@@ -4,6 +4,9 @@
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
+ R←T._NotImplemented   ⍝TODO⍝ Not ready
+ :Return
+
  :If batchFlag
      R←T._NoBatchTest
      :Return
@@ -20,6 +23,6 @@
  R←T._OK
 
 ∆TidyUp:
- P.Wait←0
+ P. ⍝Kill Wait←0
  P.Close
 ⍝Done

@@ -1,28 +1,18 @@
- R←Test_Misc_010(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;cmd;okayFlag;counter;tempFilename
+ R←Test_Misc_010(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;cmd
 ⍝ Start a process with default parameters
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
- tempFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
- cmd←'"',(FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'),'" file="',tempFilename,'" '
+ cmd←'"',(FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'),'"'
+
  :If 0
      cmd,←' -x'  ⍝ For debugging the workspace that will be run
  :EndIf
- P←⎕NEW ##.APLProcess cmd
- okayFlag←counter←0
 
- :Repeat
-     :If FilesAndDirs.IsFile tempFilename
-         ⎕DL 0.5
-     :Else
-         okayFlag←1
-     :EndIf
- :Until okayFlag∨20<counter←counter+1
- →T.PassesIf okayFlag
+ P←⎕NEW ##.APLProcess cmd
+
+ →T.PassesIf P.ExitCode=0
 
  R←T._OK
-
-∆TidyUp:
- FilesAndDirs.DeleteFile tempFilename
 ⍝Done

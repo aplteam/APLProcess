@@ -7,8 +7,8 @@
 ⍝ Instead of passing a parameter space to the constructor you can also pass a simple text vector, specifying a
 ⍝ workspace and possibly other command line parameters like, say, `MAXWS=32GB` and the like.\\
 ⍝ Notes:
-⍝ * This class is designed for test cases that require one or more additional instances of APL for some reason.
-⍝   For that reason it does not offer encryption for a RIDE.\\
+⍝ * This class is designed for test cases that require one or more additional instances of APL.
+⍝   For that reason it comes with a restriction: it does not offer encryption for a RIDE.\\
 ⍝   This restriction might be lifted at a later stage depending on demand.
 ⍝ * The destructor of this class will attempt to kill the process that was started.\\
 
@@ -17,13 +17,18 @@
     ∇ r←Version
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.4.2+23' '2021-05-??'
+      r←'APLProcess' '0.5.0+26' '2021-08-01'
     ∇
 
     ∇ History
       :Access Public Shared
-    ⍝ * 0.4.2 from 2021-05-??
+    ⍝ * 0.5.0 from 2021-08-01
+    ⍝   * By default `APLProcess` waits for the APL it started in order to catch the return code.
+    ⍝   * `Wait` renamed to `KillAfter`
+    ⍝   * New `Wait` introduced as a Boolean that defaults to 1, meaning that `APLProcess` will
+    ⍝     wait for the APL process it started
     ⍝   * Test cases added for code that was not covered yet
+    ⍝   * Uses now `MakeHelpers` for its own build process
     ⍝ * 0.4.1 from 2021-01-03
     ⍝   * Package config file corrected
     ⍝ * 0.4.0 from 2021-01-29
@@ -52,36 +57,61 @@
     :Field Public Instance Runtime←0            ⍝ Boolean or name of runtime executable.
     :Field Public Instance IsWin                ⍝ Bolean that is 1 only in case APLProcess runs under Windows.
     :Field Public Instance IsMacOS              ⍝ Bolean that is 1 only in case APLProcess runs under Mac-OS.
+    :Field Public Instance IsLinux              ⍝ Bolean that is 1 only in case APLProcess runs under Linux.
 
     :Field Public Shared WindowsStyleDefault←'Minimized'  ⍝ Only test cases should change this. As a consumer of this class use the Property `WindowsStyle`
 
-    _Wait←180
+    _KillAfter←180
+    _Wait←1
 
-    :Property Wait
+    :Property KillAfter
     :Access Public Instance
     ⍝ How many second the destructor will wait for the process to shut down before using force
         ∇ r←get
-          r←_Wait
+          r←_KillAfter
         ∇
         ∇ set arg
           'Invalid argument'⎕SIGNAL 11/⍨~(⎕DR arg.NewValue)∊83 163
-          _Wait←arg.NewValue
+          _KillAfter←arg.NewValue
         ∇
     :EndProperty
 
     :Property IsUnix
+    ⍝ Bolean that is 1 only in case APLProcess runs under any flavour of linux or Mac-OS
     :Access Public Instance
         ∇ r←get
-          r←0=IsWin+IsMacOS
+          r←0<IsLinux+IsMacOS
         ∇
     :EndProperty
 
     :Property WindowsStyle
+    ⍝ Can be one of "Hidden", "Minimized", "Maximized" or "Normal"; Windows-only
     :Access Public Instance
         ∇ r←get
           r←_WindowsStyle
         ∇
     :EndProperty
+
+    :Property ExitCode
+    ⍝ The exit code of the process. ¯1 means undefined.
+    :Access Public Instance
+        ∇ r←get;flag
+          :If 0≠Proc.⎕NC⊂'ExitCode'
+              flag←0
+              :Repeat
+                  :Trap 0
+                      r←Proc.ExitCode
+                      flag←1
+                  :Else
+                      ⎕DL 0.2
+                  :EndTrap
+              :Until flag
+          :Else
+              r←_ExitCode
+          :EndIf
+        ∇
+    :EndProperty
+
 
     ∇ make1 y;commandline;parmSpace;rt;cmd;ws;windowStyle;buff
       :Access Public Instance
@@ -115,7 +145,7 @@
           parmSpace.CommandLineArgs←1↓⊃,/' ',¨buff
       :EndIf
       'Invalid window style'⎕SIGNAL 11/⍨~(⊂parmSpace.WindowsStyle)∊'Hidden' 'Maximized' 'Minimized' 'Normal'
-      (RIDE_INIT OUT_FILE WorkspaceName Args _Wait)←parmSpace.(RideInit LogFilename WorkspaceName CommandLineArgs Wait)
+      (RIDE_INIT OUT_FILE WorkspaceName Args _KillAfter _Wait)←parmSpace.(RideInit LogFilename WorkspaceName CommandLineArgs KillAfter Wait)
       PATH←SourcePath
       Start parmSpace
     ∇
@@ -124,11 +154,13 @@
       Platform←⊃#.⎕WG'APLVersion'
       IsWin←'Win'≡3↑Platform
       IsMacOS←'Mac'≡3↑Platform
+      IsLinux←'Lin'≡3↑Platform
       _WindowsStyle←WindowsStyleDefault
       OS←(⊃⊃⎕CLASS ⎕THIS).##.OS
+      _ExitCode←¯1
     ∇
 
-    ∇ Start ps;psi;pid;cmd;host;port;keyfile;exe;z;output;args
+    ∇ Start ps;args;cmd;exe;host;keyfile;output;pid;port;psi;qdmx;z
       :If 0=≢ps.Exe
           ps.Exe←(GetRuntimeName⍣ps.Runtime)GetCurrentExecutable ⍝ else, deduce it
       :EndIf
@@ -154,21 +186,34 @@
           psi←⎕NEW Diagnostics.ProcessStartInfo,⊂ps.Exe(({0=≢⍵:⍵ ⋄ '"',(⍵~'"'),'" '}ps.WorkspaceName),args)
           psi.WindowStyle←Diagnostics.ProcessWindowStyle.⍎ps.WindowsStyle
           Proc←Diagnostics.Process.Start psi
+          :If ps.Wait
+              {}Proc.WaitForExit 1
+          :EndIf
       :Else ⍝ Unix
           :If ~∨/'LOG_FILE'⍷args            ⍝ By default...
               args,←' LOG_FILE=/dev/null '  ⍝ ... no log file
           :EndIf
-          :If 0<≢'-\bx\b'⎕S 0⍠('Mode' 'M')('Greedy' 0)⊣args
-              ∘∘∘ ⍝ How do we prevent ⎕LX from being executed in Ubuntu?
-              cmd←'{ ',args,' ',ps.Exe,' +s -q ',ps.WorkspaceName,' -c APLPPID=$PPID 2>&1 & } ; echo $!'
+          :If ps.Wait
+              cmd←'"',ps.Exe,'" ',ps.WorkspaceName
+              cmd,←' -x'
+              cmd,←' 0<&- >/dev/null 2>&1'
+              Proc.StartTime←⎕TS
+              :Trap 11
+                  {}⎕SH cmd
+              :Case 11
+                  qdmx←⎕DMX
+                  _ExitCode←⊃(//)⎕VFI{⍵↑⍨1+-' '⍳⍨⌽⍵}qdmx.Message
+              :Else
+                  'Help!'
+              :EndTrap
+              Proc.HasExited←1
           :Else
               output←(1+×≢OUT_FILE)⊃'/dev/null'OUT_FILE
               cmd←'{ ',args,' ',ps.Exe,' +s -q ',ps.WorkspaceName,' -c APLPPID=$PPID 0<&- 1>',output,' 2>&1 & } ; echo $!'
+              pid←⎕SH cmd
+              Proc.Id←pid
+              Proc.HasExited←0
           :EndIf
-          pid←⎕SH cmd
-          Proc.Id←pid
-          Proc.HasExited←0
-          Proc.StartTime←⎕TS
       :EndIf
     ∇
 
@@ -180,7 +225,7 @@
 
     ∇ Close_;count;limit
       :Implements Destructor
-      WaitForKill&(5×Wait) 0.2 ⍝ Start a new thread to do the dirty work
+      WaitForKill&KillAfter 0.2 ⍝ Start a new thread to do the dirty work
     ∇
 
     ∇ r←CreateParms
@@ -190,16 +235,18 @@
     ⍝ |------------------|-------------|
     ⍝ | `CommandLineArg` | By default empty. Optional command line parameters passed to `Exe`. (Don't specify a session file here!)|
     ⍝ | `Exe`            | Defaults to `''` which means that the same EXE is executed the instance was created from. Can also be a fully qualified name of the exe to be run.|
+    ⍝ | `KillAfter`      | Defaults to 15. Is the number of seconds the destructor waits for shuttind down before the process is killed by force.|
     ⍝ | `LogFilename`    | By default empty, meaning that any output is thrown away. If this is specified it is expected to be the name of a file.|
     ⍝ | `RideInit`       | By default empty. Is passed as `RIDE_INIT={RideInit}` and always accompanied by `RIDE_SPAWNED=1`.|
     ⍝ | `Runtime`        | Boolean that defaults to 0. Is ignored in case `Exe` is not empty.|
     ⍝ | `SessionFile`    | Defaults to 0 which means no session file is loaded. A 1 will load the default DSE file. May also be the fully qualified path to a DSE file.|
-    ⍝ | `Wait`           | How many seconds the destructor will wait for the process to shut down before using force.|
-    ⍝ | `WindowStyle`    | Defaults to "Minimized". May be "Hidden" or "Maximized"or "Normal" instead. Case sensitive.|
+    ⍝ | `Wait`           | Boolean that defaults to 1, meaning that APLProcess waits for the process to quit; 0 means it runs independently.||
+    ⍝ | `WindowStyle`    | Defaults to "Minimized". May be "Hidden" or "Maximized"or "Normal" instead. Case sensitive. Windows only.|
     ⍝ | `WorkspaceName`  | By default empty; the fully qualified name of the workspace to be loaded.|
       r←⎕NS''
       r.CommandLineArgs←''
       r.Exe←''
+      r.KillAfter←_KillAfter
       r.LogFilename←''
       r.RideInit←''
       r.Runtime←0
@@ -211,20 +258,21 @@
     ∇
 
     ∇ WaitForKill(limit interval);count
-      :If 0<≢Proc.⎕NL-2
+      :If 0=_Wait                           ⍝ Otherwise we get here only after the process has quit anyway
+      :AndIf 0<≢Proc.⎕NL-2
           :If ~Proc.HasExited
               count←0
               :While ~Proc.HasExited
                   {}⎕DL interval
                   count←count+1
-              :Until count>limit
+              :Until count>limit×5
           :EndIf ⍝ OK, force has to be used
           :Trap 11
               {}Kill Proc.Id
+              :If 0=Proc.⎕NC⊂'HasExited'
+                  Proc.HasExited←1
+              :EndIf
           :EndTrap
-          :If 0=Proc.⎕NC⊂'HasExited'
-              Proc.HasExited←1
-          :EndIf
       :EndIf
     ∇
 
