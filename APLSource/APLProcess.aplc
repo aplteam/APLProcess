@@ -11,13 +11,15 @@
 ⍝   For that reason it comes with a restriction: it does not offer encryption for a RIDE.\\
 ⍝   This restriction might be lifted at a later stage depending on demand.
 ⍝ * The destructor of this class will attempt to kill the process that was started.\\
+⍝ Kai Jaeger\\
+⍝ Homepage: <https://github.com/aplteam/APLProcess/>
 
     ⎕IO←1 ⋄ ⎕ML←1
 
     ∇ r←Version
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.5.0+26' '2021-08-01'
+      r←'APLProcess' '0.5.0+27' '2021-08-01'
     ∇
 
     ∇ History
@@ -160,7 +162,7 @@
       _ExitCode←¯1
     ∇
 
-    ∇ Start ps;args;cmd;exe;host;keyfile;output;pid;port;psi;qdmx;z
+    ∇ Start ps;args;cmd;exe;host;keyfile;output;pid;port;psi;qdmx;Z
       :If 0=≢ps.Exe
           ps.Exe←(GetRuntimeName⍣ps.Runtime)GetCurrentExecutable ⍝ else, deduce it
       :EndIf
@@ -195,11 +197,12 @@
           :EndIf
           :If ps.Wait
               cmd←'"',ps.Exe,'" ',ps.WorkspaceName
-              cmd,←' -x'
+              cmd,←' ',args
               cmd,←' 0<&- >/dev/null 2>&1'
               Proc.StartTime←⎕TS
               :Trap 11
-                  {}⎕SH cmd
+                  Z←⎕SH cmd
+                  _ExitCode←0
               :Case 11
                   qdmx←⎕DMX
                   _ExitCode←⊃(//)⎕VFI{⍵↑⍨1+-' '⍳⍨⌽⍵}qdmx.Message

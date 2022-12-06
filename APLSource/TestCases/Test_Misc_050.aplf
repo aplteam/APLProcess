@@ -28,7 +28,7 @@
  :EndIf
  P←⎕NEW ##.APLProcess parms
  Conga←⎕NS''
- (↑'Conga' 'DRC')Conga.⎕CY'Conga'
+ (↑'Conga' 'DRC')Conga.⎕CY'conga'
  :Repeat
      (rc msg more)←3↑Conga.DRC.Init''
  :Until 1043≠rc
