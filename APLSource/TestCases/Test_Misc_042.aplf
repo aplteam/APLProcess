@@ -4,25 +4,28 @@
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
- R←T._NotImplemented   ⍝TODO⍝ Not ready
- :Return
-
  :If batchFlag
-     R←T._NoBatchTest
-     :Return
+     R←T._NoBatchTest ⋄ →0
  :EndIf
+
+ :If 'Win'≢APLTreeUtils2.GetOperatingSystem ⍬
+     R←T._WindowsOnly ⋄ →0
+ :EndIf
+
+ CommTools.Pause'This test needs you: it will start APL in a normal window with your default session'
 
  parms←##.APLProcess.CreateParms
  parms.SessionFile←1
  parms.WindowsStyle←'Normal'
+ parms.Wait←0
 
- P←⎕NEW ##.APLProcess parms
- ⎕DL 2
- →T.GoToTidyUp 0=1 ∆YesOrNo'Does the newly created inatance of Dyalog come with the default session?'
+ P←⎕NEW ##.APLProcess(,⊂parms)
+ ⎕DL 3
+ →T.GoToTidyUp 0=1 CommTools.YesOrNo'Does the newly created inatance of Dyalog come with the default session?'
 
  R←T._OK
 
 ∆TidyUp:
- P. ⍝Kill Wait←0
+ P.KillItself
  P.Close
 ⍝Done

@@ -1,11 +1,15 @@
  R←Test_Misc_050(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;P;Conga;rc;more;port;answer;connectionName;buff;msg;runningVersion;shouldBeVersion;cfg;b;b2
 ⍝ Start a process with the oldest supported runtime version of Dyalog.
 ⍝ What's oldest version is established from the Make/make.bat file in the current directory.
-⍝ The workspace is then asked via Conga.
+⍝ The workspace is then questioned via Conga.
 ⍝ See also Test_Misc_040 which checks the same but with a very different approach.
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
+
+ :If 'Win'≢APLTreeUtils2.GetOperatingSystem ⍬
+     R←T._WindowsOnly ⋄ →0
+ :EndIf
 
  port←9921
  connectionName←'C1'
@@ -26,7 +30,8 @@
      parms.CommandLineArgs,←' -x'               ⍝ For debugging the workspace that will be run
      parms.WindowsStyle←'Normal'
  :EndIf
- P←⎕NEW ##.APLProcess parms
+ parms.Wait←0
+ P←⎕NEW ##.APLProcess (,⊂parms)
  Conga←⎕NS''
  (↑'Conga' 'DRC')Conga.⎕CY'conga'
  :Repeat

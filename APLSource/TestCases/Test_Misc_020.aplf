@@ -14,7 +14,7 @@
      parms.WindowsStyle←'Normal'
  :EndIf
 
- P←⎕NEW ##.APLProcess parms
+ P←⎕NEW ##.APLProcess (,⊂parms)
 
 →T.PassesIf 123=P.ExitCode
 

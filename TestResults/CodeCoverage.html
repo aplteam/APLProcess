@@ -35,6 +35,9 @@ div.code-block {
     margin: 0.5em 0.5em 0.5em 0.5em;
     padding: 0.5em;
 }
+div.code-block.missing {
+    background-color: #fa605254;
+}
 div.code-block code {display: block; white-space: pre-wrap; margin:0; padding:0; word-wrap: break-word;}
 .emphasize { font-weight: 800;}
 ul li, ol li {margin: 0.7em 0.2em;}
@@ -49,7 +52,9 @@ ul li, ol li {margin: 0.7em 0.2em;}
     src:
         local("APL385 Unicode"),
         url("https://misc.aplteam.com/apl385.ttf") format("truetype");
-}}
+}
+.info {border: 1px silver dashed; background-color: #F2F2F2;margin: 0.5em; padding: 0.5em;}
+}
 @media print{@page {size: portrait}
 @page {
     margin: 1cm 1cm 1cm 1.75cm;
@@ -106,50 +111,156 @@ ul li, ol li {margin: 8pt 3pt;}
     src:
         local("APL385 Unicode"),
         url("https://misc.aplteam.com/apl385.ttf") format("truetype");
-}}
+}
+.info {border: 1px silver dashed; background-color: #F2F2F2;margin: 8px; padding: 8px;}
+}
 </style>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.2/b-2.0.0/b-print-2.0.0/fh-3.1.9/r-2.2.9/datatables.min.css"/>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-3.6.0/dt-1.11.2/b-2.0.0/b-print-2.0.0/fh-3.1.9/r-2.2.9/datatables.min.js"></script>
 </head>
 <body>
 <h1 id="top">Coverage Report</h1>
-<p>Watched: 23 fns/opr within <code>#.APLProcess.APLProcess</code></p>
-<p>The test test suite was execute once:</p>
+<p>Watched: 22 fns/opr within <code>#.APLProcess.APLProcess</code></p>
+<p>The test suite was executed once:</p>
 <table>
 <thead>
 <tr><th>Executed at</th><th>APLVersion</th><th>Memory (MB)</th></tr>
-<thead>
-</tbody>
-<tr><td>2021-05-17 16:23:31</td><td>Windows-64 ⋄ 18.1.40326.0 ⋄ W ⋄ Development</td><td>54</td></tr>
-</tbody>
-</table>
-<p>Overall 76% of the testable code is  covered.</p>
-<p>(Comment lines, empty lines, all <code>:End</code>* lines etc. are all ignored)</p>
-<p>15 of the fns/opr are 100% covered.</p>
-<p>1 are not covered at all:</p>
-<table>
+</thead>
 <tbody>
-<tr><td>#.APLProcess.APLProcess.UNIX_IssueKill</td></tr>
+<tr><td>2023-04-27 20:51:21</td><td>Windows-64 ⋄ 18.0.46943.0 ⋄ W ⋄ Development ⋄ Unicode</td><td>53</td></tr>
 </tbody>
 </table>
+<p>Overall 74% of the testable code is covered.</p>
+<p>(Comment lines, empty lines, all <code>:End</code>* lines etc. are ignored)</p>
+<p>13 of the fns/opr are 100% covered.</p>
 <div id="partly-covered" class="keep-together">
-<p>7 are partly covered:</p>
-<table>
+<table id="percent">
 <thead>
 <tr><th style="text-align:left;">Function/Operator</th><th style="text-align:left;">Lines not executed</th><th style="text-align:left;">Coverage</th><th style="text-align:right;">≢</th></tr>
 </thead>
 <tbody>
-<tr><td>#.APLProcess.APLProcess.GetCurrentExecutable</td><td>8←≢6-9,12-14,16</td><td>38%</td><td class="align-right">13</td></tr>
-<tr><td>#.APLProcess.APLProcess.Start</td><td>13←≢14,16,27-28,30-32,34-35,37-40</td><td>59%</td><td class="align-right">32</td></tr>
-<tr><td>#.APLProcess.APLProcess.Kill</td><td>5←≢7,16-17,25-26</td><td>69%</td><td class="align-right">16</td></tr>
-<tr><td>#.APLProcess.APLProcess.GetRuntimeName</td><td>10</td><td>80%</td><td class="align-right">5</td></tr>
-<tr><td>#.APLProcess.APLProcess.SourcePath</td><td>8</td><td>83%</td><td class="align-right">6</td></tr>
-<tr><td>#.APLProcess.APLProcess.WaitForKill</td><td>13</td><td>92%</td><td class="align-right">12</td></tr>
-<tr><td>#.APLProcess.APLProcess.make1</td><td>17</td><td>96%</td><td class="align-right">24</td></tr>
+<tr class="uncovered"><td>#.APLProcess.APLProcess.set_Wait</td><td>1, 2</td><td>0</td><td>2</td></tr>
+<tr class="uncovered"><td>#.APLProcess.APLProcess.History</td><td>27</td><td>0</td><td>1</td></tr>
+<tr><td>#.APLProcess.APLProcess.GetCurrentExecutable</td><td>8←≢6-9,12-14,16</td><td>38</td><td>13</td></tr>
+<tr><td>#.APLProcess.APLProcess.Start</td><td>20←≢7,16,18,32-41,45,47-51,53</td><td>51</td><td>41</td></tr>
+<tr><td>#.APLProcess.APLProcess.HasExited</td><td>7</td><td>67</td><td>3</td></tr>
+<tr><td>#.APLProcess.APLProcess.get_ExitCode</td><td>8, 12</td><td>78</td><td>9</td></tr>
+<tr><td>#.APLProcess.APLProcess.GetRuntimeName</td><td>10</td><td>80</td><td>5</td></tr>
+<tr><td>#.APLProcess.APLProcess.SourcePath</td><td>8</td><td>83</td><td>6</td></tr>
+<tr><td>#.APLProcess.APLProcess.make1</td><td>17</td><td>96</td><td>24</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.get_Wait</td><td></td><td>100</td><td>1</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.set_WindowsStyle</td><td></td><td>100</td><td>0</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.get_WindowsStyle</td><td></td><td>100</td><td>1</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.set_ExitCode</td><td></td><td>100</td><td>0</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.Version</td><td></td><td>100</td><td>1</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.make_common</td><td></td><td>100</td><td>3</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.Close</td><td></td><td>100</td><td>1</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.Close_</td><td></td><td>100</td><td>1</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.CreateParms</td><td></td><td>100</td><td>11</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.WaitForKill</td><td></td><td>100</td><td>10</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.GetPID</td><td></td><td>100</td><td>1</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.KillItself</td><td></td><td>100</td><td>3</td></tr>
+<tr class="fullyCovered"><td>#.APLProcess.APLProcess.GetDefaultDseFilename</td><td></td><td>100</td><td>3</td></tr>
 </tbody>
 </table>
 </div>
+<script>
+$(document).ready(function() {
+    var oTable;
+    oTable = $("#percent").DataTable( {
+        paging:   false,
+        ordering: true,
+        info:     true,
+        fixedHeader: true,
+        order: [2,"asc"],
+        dom: "Bft",
+        drawCallback: function( settings ) {
+             var api = this.api();
+             $('.header[id^="listing_"]').next().addBack().css("display","none");
+             api.rows( {page:"current"} ).data().each(function(data){
+              id = data[0];
+              id = id.match(/"(\#.*?)"/);
+              if (id){$(id[1]).next().addBack().css("display","block");}
+             })
+        },      
+        buttons: [
+        {
+            text: "Partly covered (7)",
+            titleAttr: "50%",
+            className: "active",
+            action: function ( e, dt, node, config ) {
+                var text = this.text();
+                var search = "^(?!(0%|100%)).*";
+                oTable.column(2)
+                    .search(search,true,false,false)
+                    .draw();
+                $(".dt-buttons button").removeClass("active");
+                this.active( true );
+            }
+        },
+        {
+            text: "Uncovered (2)",
+            titleAttr: "0%",
+            className: "active",
+            action: function ( e, dt, node, config ) {
+                var text = this.text();
+                var search = "^0%";
+                oTable.column(2)
+                    .search(search,true,false,false)
+                    .draw();
+                $(".dt-buttons button").removeClass("active");
+                this.active( true );
+            }
+        },
+        {
+            text: "Fully covered (13)",
+            titleAttr: "100%",
+            className: "active",
+            action: function ( e, dt, node, config ) {
+                var text = this.text();
+                var search = "100%";
+                oTable.column(2)
+                    .search(search,true,false,false)
+                    .draw();
+                $(".dt-buttons button").removeClass("active");
+                this.active( true );
+            }
+        },
+        {
+            text: "All (22)",
+            titleAttr: "all",
+            className: "active",
+            action: function ( e, dt, node, config ) {
+                var text = this.text();
+                var search = ".";
+                oTable.column(2)
+                    .search(search,true,false,false)
+                    .draw();
+                $(".dt-buttons button").removeClass("active");
+                this.active( true );
+            }
+        },
+    ],
+ 
+        columnDefs: [
+            {className: "align-right", targets: [2,3]
+            },
+            {
+                render: function ( data, type, row, meta ) {
+                            return data+"%" ;        
+                        },
+                targets: 2
+            }
+        ]             
+    } );
+    oTable.button(0).trigger();
+
+} );    
+</script>
 <div id="footer">
 <hr>
-<p>Created by "CodeCoverage" version 0.7.2+40 from 2021-03-01</p>
+<p>Created by "CodeCoverage" version 0.10.2+52 from 2023-04-09</p>
 </div>
+
 </body>
 </html>

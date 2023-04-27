@@ -8,7 +8,7 @@
  :If 0
      cmd,←' -x'  ⍝ For debugging the workspace that will be run
  :EndIf
- P←⎕NEW ##.APLProcess cmd
+ P←⎕NEW ##.APLProcess (,⊂cmd)
  {}P.WindowsStyle
 →T.PassesIf P.ExitCode=199
 

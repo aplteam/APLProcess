@@ -20,7 +20,7 @@
      parms.WindowsStyle←'Normal'
  :EndIf
 
- P←⎕NEW ##.APLProcess parms
+ P←⎕NEW ##.APLProcess (,⊂parms)
  →T.GoToTidyUp P.ExitCode≠130
  buff←⊃⎕NGET tempFilename
  →T.GoToTidyUp~∨/'To be written to the APL log file'⍷buff

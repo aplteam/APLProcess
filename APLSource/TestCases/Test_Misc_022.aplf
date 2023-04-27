@@ -14,7 +14,7 @@
      parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run (but its a Runtime!!)
      parms.WindowsStyle←'Normal'
  :EndIf
- P←⎕NEW ##.APLProcess parms
+ P←⎕NEW ##.APLProcess (,⊂parms)
 
  →T.PassesIf P.ExitCode=125
 

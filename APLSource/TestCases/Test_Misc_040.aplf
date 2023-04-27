@@ -5,30 +5,20 @@
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
-R←T._NotImplemented   ⍝TODO⍝  ⍝TODO⍝  ⍝TODO⍝
-:return     ⍝ Does not work really
-
  parms←##.APLProcess.CreateParms
- parms.KillAfter←200
+ parms.KillAfter←1
  parms.Wait←0
  :If 0
      parms.SessionFile←1
      parms.WorkspaceName←'DoesNotExistForSure'
      parms.WindowsStyle←'Normal'
  :EndIf
- P←⎕NEW ##.APLProcess parms
- ⎕DL 5
- →T.PassesIf P.Proc.HasExited=0
- →T.PassesIf P.KillAfter=200
- P.KillAfter←1
- ⎕DL 0.2
- Assert P.HasExited=0
- P.Close
- ⎕DL 0.2
+ P←⎕NEW ##.APLProcess (,⊂parms)
+ →T.PassesIf P.Proc.Id∊{⍵[;2]}##.OS.GetTaskList 0 0 0
+ P.Close  ⍝ Only this triggers the kill procedure
+ ⎕DL 0.5
  Assert P.HasExited=1
- →T.PassesIf P.KillAfter=1
-
- →T.PassesIf P.ExitCode=¯1
+ →T.PassesIf~P.Proc.Id∊{⍵[;2]}##.OS.GetTaskList 0 0 0
 
  R←T._OK
 ⍝Done
