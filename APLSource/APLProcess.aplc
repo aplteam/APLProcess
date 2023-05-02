@@ -17,12 +17,12 @@
     ∇ r←Version
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.5.0' '2021-04-27'
+      r←'APLProcess' '0.5.0' '2021-05-02'  ⍝ Still work in progress, especially on the Mac
     ∇
 
     ∇ r←History
       :Access Public Shared
-    ⍝ * 0.5.0 from 2021-04-27
+    ⍝ * 0.5.0 from 2021-05-02
     ⍝   * The method `Kill` has been renamed into `KillItself` and does not required a right argument anymore
     ⍝   * `RideInit` removed as a parameter, `RidePort` introduced instead
     ⍝   * `History` does return a result now
@@ -141,30 +141,33 @@
       OS←(⊃⊃⎕CLASS ⎕THIS).##.OS
     ∇
 
-    ∇ Start ps;psi;pid;cmd;host;port;keyfile;exe;z;output;args;Z;qdmx
+    ∇ Start ps;psi;pid;cmd;host;port;keyfile;exe;z;output;args;Z;qdmx;ride
       :If 0=≢ps.Exe
           ps.Exe←(GetRuntimeName⍣ps.Runtime)GetCurrentExecutable ⍝ else, deduce it
       :EndIf
       Exe←ps.Exe
-      args←ps.CommandLineArgs
+      ride←''
       :If 0≠ps.RidePort
-          args,←' RIDE_INIT=SERVE:*:"',(⍕ps.RidePort),'" RIDE_SPAWNED=1 '
+          ride←'RIDE_INIT="SERVE:*:',(⍕ps.RidePort),'" RIDE_SPAWNED=1 '
       :EndIf
-      :If ~ps.Runtime
-          :If (,0)≡,ps.SessionFile
-              args,←' session_file="" '
-          :ElseIf (,1)≡,ps.SessionFile
-              ps.SessionFile←GetDefaultDseFilename ps.Exe
-              args,←' session_file="',ps.SessionFile,'" '
-          :ElseIf ' '=1↑0⍴ps.SessionFile
-              args,←' session_file="',ps.SessionFile,'" '
-          :Else
-              'Invalid parameter: "SessionFile"'Assert 0
-          :EndIf
-      :EndIf
+      args←ps.CommandLineArgs
       args,←(0<≢ps.LogFilename)/' LOG_FILE="',ps.LogFilename,'" '
       ⍝ NB Always set RIDE_INIT to override current process setting
-      :If 'Win'≡##.APLTreeUtils2.GetOperatingSystem ⍬
+      :Select ##.APLTreeUtils2.GetOperatingSystem ⍬
+      :Case 'Win'
+          :If ~ps.Runtime
+              :If (,0)≡,ps.SessionFile
+                  args,←' session_file="" '
+              :ElseIf (,1)≡,ps.SessionFile
+                  ps.SessionFile←GetDefaultDseFilename ps.Exe
+                  args,←' session_file="',ps.SessionFile,'" '
+              :ElseIf ' '=1↑0⍴ps.SessionFile
+                  args,←' session_file="',ps.SessionFile,'" '
+              :Else
+                  'Invalid parameter: "SessionFile"'Assert 0
+              :EndIf
+          :EndIf
+          cmd←ps.Exe
           ⎕USING←'System,System.dll'
           psi←⎕NEW Diagnostics.ProcessStartInfo,⊂ps.Exe(({0=≢⍵:⍵ ⋄ '"',(⍵~'"'),'" '}ps.WorkspaceName),args)
           psi.WindowStyle←Diagnostics.ProcessWindowStyle.⍎ps.WindowsStyle
@@ -172,30 +175,41 @@
           :If ps.Wait
               Proc.WaitForExit ⍬
           :EndIf
-      :Else ⍝ Unix
+      :Case 'Lin'
           :If ps.Wait
               cmd←'"',ps.Exe,'" ',ps.WorkspaceName
               cmd,←' ',args
+              cmd,←' ',ride
               cmd,←' 0<&- >/dev/null 2>&1'
-              :Trap 11
-                  Z←⎕SH cmd
-                  _ExitCode←0
-              :Case 11
-                  qdmx←⎕DMX
-                  _ExitCode←⊃(//)⎕VFI{⍵↑⍨1+-' '⍳⍨⌽⍵}qdmx.Message
-              :Else
-                  'Help!'
-              :EndTrap
+              Z←⎕SH cmd
+              _ExitCode←0
               Proc.HasExited←1
           :Else
               output←(1+×≢OUT_FILE)⊃'/dev/null'OUT_FILE
-              cmd←'{ ',args,' ',ps.Exe,' +s -q ',ps.WorkspaceName,' -c APLPPID=$PPID 0<&- 1>',output,' 2>&1 & } ; echo $!'
+              cmd←'{ ',args,' ',ride,' "',ps.Exe,'" +s -q ',ps.WorkspaceName,' -c APLPPID=$PPID 0<&- 1>',output,' 2>&1 & } ; echo $!'
               pid←⎕SH cmd
               Proc.Id←⊃⊃(//)⎕VFI∊pid
               Proc.HasExited←0
           :EndIf
           Proc.StartTime←⎕TS
-      :EndIf
+      :Case 'Mac'
+          :If ps.Wait
+              cmd←ride
+              cmd,←'"',ps.Exe,'" ',ps.WorkspaceName
+              cmd,←' ',args
+              cmd,←' 0<&- >/dev/null 2>&1'
+              Z←⎕SH cmd
+              _ExitCode←0
+              Proc.HasExited←1
+          :Else
+              output←(1+×≢OUT_FILE)⊃'/dev/null'OUT_FILE
+              cmd←'{ ',cmd,' ',ps.Exe,' +s -q ',ps.WorkspaceName,' -c APLPPID=$PPID 0<&- 1>',output,' 2>&1 & } ; echo $!'
+              pid←⎕SH cmd
+              Proc.Id←⊃⊃(//)⎕VFI∊pid
+              Proc.HasExited←0
+          :EndIf
+          Proc.StartTime←⎕TS
+      :EndSelect
     ∇
 
     ∇ Close;count;limit

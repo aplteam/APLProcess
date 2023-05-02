@@ -1,8 +1,8 @@
  RunTests;htmlFilename;verbose;option
-    ⍝ 1. Prepares the test framework
-    ⍝ 2. Runs all test cases
-    ⍝ 3. Processes the code coverage data (if collected)
-    ⍝ 4. Asks the user whether the code coverage report should be put on view
+⍝ 1. Prepares the test framework
+⍝ 2. Runs all test cases
+⍝ 3. Processes the code coverage data (if collected)
+⍝ 4. Asks the user whether the code coverage report should be put on view
  Prepare
  T.Run 1
  :If 0<≢T.codeCoverage
