@@ -17,11 +17,13 @@
     ∇ r←Version
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.5.0' '2021-05-02'  ⍝ Still work in progress, especially on the Mac
+      r←'APLProcess' '0.5.1' '2021-05-08'  ⍝ Still work in progress, especially on the Mac
     ∇
 
     ∇ r←History
       :Access Public Shared
+    ⍝ * 0.5.1 from 2021-05-08
+    ⍝   * Bug fix: addressing APLTreeUtils2 did not always work
     ⍝ * 0.5.0 from 2021-05-02
     ⍝   * The method `Kill` has been renamed into `KillItself` and does not required a right argument anymore
     ⍝   * `RideInit` removed as a parameter, `RidePort` introduced instead
@@ -32,21 +34,6 @@
     ⍝   * Package config file corrected
     ⍝ * 0.4.0 from 2021-01-29
     ⍝   * Fully transformed into a Tatin package
-    ⍝ * 0.3.0 from 2020-12-19
-    ⍝   * Does not :Include APLTreeUtils anymore
-    ⍝   * Property `Wait` introduced
-    ⍝   * Property name `Runtime` changed to `Runtime`
-    ⍝   * Documentation improved
-    ⍝ * 0.2.1 from 2020-08-14
-    ⍝   * `Kill` now kills `Proc.ID` (self so to speak) in case ⍵ is empty.
-    ⍝ * 0.2.0 from 2020-03-23
-    ⍝   * File extension changed from .DYALOG to .APLC
-    ⍝ * 0.1.2 from 2020-01-30
-    ⍝   * Bug fix: `WaitForKill` can run into a timing issue
-    ⍝ * 0.1.1 from 2020-01-29
-    ⍝   * Bug fix in `Start`
-    ⍝ * 0.1.0 from 2020-01-12
-    ⍝   * First version (Windows only)
       r←↑{⍵↓⍨+/∧\∧⌿(↑⍵)=' '}{⍵↓⍨⍵⍳'⍝'}¨{⍵/⍨'⍝'=⊃¨⍵}{⍵↓⍨+/∧\(↑⍵)=' '}¨1↓⎕NR⊃⎕SI
     ∇
 
