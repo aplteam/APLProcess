@@ -19,5 +19,5 @@
   source: "APLSource/APLProcess.aplc",
   tags: "process",
   userCommandScript: "",
-  version: "0.5.1+42",
+  version: "0.5.1+43",
 }

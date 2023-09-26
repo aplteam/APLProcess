@@ -1,4 +1,4 @@
- R←Test_Misc_800(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;port;connectionName;parms;qdmx;rc;msg;more;Conga
+ R←Test_Misc_800(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;port;connectionName;parms;qdmx;rc;msg;more
 ⍝ Test properties and methods
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')

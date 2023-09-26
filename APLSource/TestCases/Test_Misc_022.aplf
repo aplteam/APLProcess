@@ -6,7 +6,7 @@
 
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'
- parms.CommandLineArgs←'rc=125'
+ parms.CommandLineArgs←'RC=125'
  parms.Runtime←1
 
  :If 0

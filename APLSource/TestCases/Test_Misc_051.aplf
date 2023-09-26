@@ -4,7 +4,7 @@
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
- cmd←'"',(FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'),'" rc=199'
+ cmd←'"',(FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'),'" RC=199'
  :If 0
      cmd,←' -x'  ⍝ For debugging the workspace that will be run
  :EndIf
