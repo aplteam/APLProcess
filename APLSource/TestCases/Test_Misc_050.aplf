@@ -19,6 +19,12 @@
  cfg←⎕XML⊃FilesAndDirs.NGET FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'/Tests/Make/make.config'
  parms.Exe←3⊃cfg[cfg[;2]⍳⊂'exe';]
  parms.Exe←'dyalog.exe'⎕R'dyalogrt.exe'⊣parms.Exe
+
+ :If ~⎕NEXISTS parms.Exe
+     R←T._NotApplicable  ⍝ Because that version of APL is not installed
+     :Return
+ :EndIf
+
  shouldBeVersion←⊃(//)⎕VFI⊃' [0-9]{2,}\.[0-9]{1,} '⎕S{⍵.Match}⊣parms.Exe
  :If ∨/b←cfg[;2]≡¨⊂'parm'
  :AndIf ∨/b2←'session_file='∘{⍺≡(≢⍺)↑⍵}¨b⌿cfg[;3]
@@ -31,7 +37,7 @@
      parms.WindowsStyle←'Normal'
  :EndIf
  parms.Wait←0
- P←⎕NEW ##.APLProcess (,⊂parms)
+ P←⎕NEW ##.APLProcess(,⊂parms)
  Conga←⎕NS''
  (↑'Conga' 'DRC')Conga.⎕CY'conga'
  :Repeat
