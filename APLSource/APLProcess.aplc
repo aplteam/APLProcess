@@ -24,13 +24,13 @@
     ∇ r←Version
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.7.1-beta-1' '2024-04-11'    ⍝ Without Ride all fine, with Ride the Mac is still posing problems
+      r←'APLProcess' '0.7.1' '2024-04-28'    ⍝ Without Ride all fine, with Ride the Mac is still posing problems
     ∇
 
     ∇ r←History
       :Access Public Shared
-    ⍝ * 0.7.1 from 2024-04-11
-    ⍝   * Killed the process even with Wait←0, meaning that the process was not running independently. 
+    ⍝ * 0.7.1 from 2024-04-28
+    ⍝   * Killed the process even with Wait←0, meaning that the process was not running independently.
     ⍝ * 0.7.0 from 2023-09-26
     ⍝   * Now APLProcess can use .NET or .NET Framework (former version only worked with .NET Framework)
     ⍝ * 0.6.0 from 2021-05-27

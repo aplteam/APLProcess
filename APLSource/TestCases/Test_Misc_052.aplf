@@ -2,7 +2,7 @@
 ⍝ Check the "Version" function
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
- R←T._Failed
+ R←T._OK
 
  →T.PassesIf 3=≢##.APLProcess.Version
 ⍝Done

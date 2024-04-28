@@ -21,7 +21,7 @@
 
  P←⎕NEW ##.APLProcess(,⊂parms)
  ⎕DL 3
- →T.GoToTidyUp 0=1 CommTools.YesOrNo'Does the newly created inatance of Dyalog come with the default session?'
+ →T.GoToTidyUp 0=1 CommTools.YesOrNo'Does the newly created inatance of Dyalog come with a session? (May take a couple of seconds) '
 
  R←T._OK
 
