@@ -22,9 +22,16 @@
     ⎕IO←1 ⋄ ⎕ML←1
 
     ∇ r←Version
+    ⍝ Returns the version number from `TatinVars` if possible.
     ⍝ See also `History`
       :Access Public Shared
-      r←'APLProcess' '0.7.1' '2024-04-28'    ⍝ Without Ride all fine, with Ride the Mac is still posing problems
+      :If 0<##.⎕NC'TatinVars.CONFIG'
+          r←(⎕JSON⍠('Dialect' 'JSON5')⊢##.TatinVars.CONFIG).version
+      :Else
+    ⍝ When a script was not loaded with Tatin, there will be no namespace `TatinVars`.
+    ⍝ In such cases we cannot provide a version number, so we return just ''.
+          r←''
+      :EndIf
     ∇
 
     ∇ r←History
