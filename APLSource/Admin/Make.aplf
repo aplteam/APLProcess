@@ -46,7 +46,7 @@
      :EndIf
      path←C.HOME,'/',C.CIDER.distributionFolder
      M.RecreateFolder path
-     {}⎕SE.Tatin.CreateAPIfromCFG ##.APLProcess cfg
+     ⍝{}⎕SE.Tatin.CreateAPIfromCFG ##.APLProcess cfg
      parms←⎕SE.Tatin.CreateBuildParms C.HOME
      parms.targetPath←C.CIDER.distributionFolder
      parms.version←cfg.version
