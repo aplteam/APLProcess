@@ -35,7 +35,10 @@
     ∇
 
     ∇ r←History
-      :Access Public Shared
+      :Access Public Shared  
+    ⍝ * 1.0.0 from 2025-07-19                
+    ⍝   * Tests...
+    ⍝   * Packages updated (development only)
     ⍝ * 0.8.0 from 2024-04-22
     ⍝   * Packages updated & test fixed (`Version`
     ⍝ * 0.7.1 from 2024-04-28
