@@ -1,4 +1,4 @@
- R←Test_Misc_052(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;version
+ R←Test_Misc_701(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;version
 ⍝ Check the "Version" function
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')

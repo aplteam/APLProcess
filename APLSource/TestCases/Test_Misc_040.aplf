@@ -1,24 +1,36 @@
- R←Test_Misc_040(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms;content;tempFilename;expected;pid
-⍝ Start a process with setting the "KillAfter" parameter.
-⍝ We do not load a workspace, meaning that the process does not quit itself for sure.
+ R←Test_Misc_040(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;P;tempFilename
+⍝ Start a process that potentially runs forever and kill it
+⍝ We load a workspace that runs forever, and check whether it has done its job.
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.KillAfter←1
  parms.Wait←0
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\RunForever.dws'
+ tempFilename←FilesAndDirs.GetTempPath,'APLProcess-Test-',⊃⎕SI
+ parms.CommandLineArgs←'file="',tempFilename,'"'
+
  :If 0
      parms.SessionFile←1
-     parms.WorkspaceName←'DoesNotExistForSure'
      parms.WindowsStyle←'Normal'
+     parms.CommandLineArgs,←' -x'
  :EndIf
- P←⎕NEW ##.APLProcess (,⊂parms)
- →T.PassesIf P.Proc.Id∊{⍵[;2]}##.OS.GetTaskList 0 0 0
- P.Close  ⍝ Only this triggers the kill procedure
- ⎕DL 0.5
- Assert P.HasExited=1
- →T.PassesIf~P.Proc.Id∊{⍵[;2]}##.OS.GetTaskList 0 0 0
+
+ P←##.APLProcess.New(,⊂parms)
+ {⎕NEXISTS ⍵:shy←⍬ ⋄ _←⎕DL 1 ⋄ ∇ ⍵}tempFilename             ⍝ Wait until the file appears
+ →T.GoToTidyUp'I was here'{⍺≢(≢⍺)↑⍵}⊃⎕NGET tempFilename
+ →T.GoToTidyUp P.GetPID≠P.Proc.Id
+ P.KillItself       ⍝ We can't really test this becausee APL might well have quit already
+ →T.GoToTidyUp P.HasExited≠1
+ →T.GoToTidyUp P.GetPID∊{⍵[;2]}##.OS.GetTaskList 0 0 0
+ →T.GoToTidyUp'Minimized'≢P.WindowsStyle
+ →T.GoToTidyUp~P.UseDotNetCore∊0 1
+ →T.GoToTidyUp parms.WorkspaceName≢P.WorkspaceName
+ →T.GoToTidyUp P.Runtime≠0
 
  R←T._OK
+
+∆TidyUp:
+ {}FilesAndDirs.DeleteFile tempFilename
 ⍝Done

@@ -1,0 +1,10 @@
+ R←Test_Misc_702(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;history
+⍝ Check the "History" function
+ ⎕IO←1 ⋄ ⎕ML←1
+ ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
+ R←T._OK
+
+ history←##.APLProcess.History
+ →T.PassesIf 1=≡history
+ →T.PassesIf' '=1↑0⍴history
+⍝Done

@@ -15,7 +15,7 @@
      parms.WindowsStyle←'Normal'
  :EndIf
  parms.Wait←0
- P←⎕NEW ##.APLProcess (,⊂parms)
+ P←##.APLProcess.New parms
  →T.PassesIf parms.CommandLineArgs≡P.Args
  :Trap 2
      P.WindowsStyle←'Normal'

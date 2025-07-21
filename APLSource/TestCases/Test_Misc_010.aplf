@@ -1,17 +1,16 @@
- R←Test_Misc_010(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;cmd
-⍝ Start a process with default parameters: waits for the process to end
+ R←Test_Misc_010(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms
+⍝ Start a process with default parameters except the workspace. Waits for the process to end
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
- cmd←'"',(FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'),'"'
-
+ parms←##.APLProcess.CreateParms
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'
  :If 0
-     cmd,←' -x'  ⍝ For debugging the workspace that will be run
+     parms.CommandLineArgs←'-x'  ⍝ For debugging the workspace that will be run
  :EndIf
 
- P←⎕NEW ##.APLProcess (,⊂cmd)
-
+ P←##.APLProcess.New(,⊂parms)
  →T.PassesIf P.ExitCode=0
 
  R←T._OK

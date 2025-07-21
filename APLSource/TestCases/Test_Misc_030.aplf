@@ -1,32 +1,22 @@
- R←Test_Misc_030(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms;content;expected;tempFilename;buff
-⍝ Start a process with setting the "LogFilename" parameter.
-⍝ We should find the content defined as "File=" in that log file.
-⍝ For that the WS to be loaded will write what's assign to "write2log" and then write
-⍝ the log to the file specified in the "file=" parameter
+ R←Test_Misc_030(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms
+⍝ Start a process with setting parameters "WorkspaceName" and "CommandLineArgs" but use runtime
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Log.dws'
- parms.CommandLineArgs←'write2log="To be written to the APL log file"'
- parms.LogFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
- tempFilename←FilesAndDirs.EnforceSlash FilesAndDirs.GetTempFilename2''
- parms.CommandLineArgs,←' file="',tempFilename,'"'
+ parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'
+ parms.CommandLineArgs←'RC=254'
+ parms.Runtime←1
 
  :If 0
      parms.SessionFile←1
-     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run (but its a Runtime!!)
      parms.WindowsStyle←'Normal'
  :EndIf
+ P←##.APLProcess.New parms
 
- P←⎕NEW ##.APLProcess (,⊂parms)
- →T.GoToTidyUp P.ExitCode≠130
- buff←⊃⎕NGET tempFilename
- →T.GoToTidyUp~∨/'To be written to the APL log file'⍷buff
+ →T.PassesIf P.ExitCode=254
 
  R←T._OK
-
-∆TidyUp:
- FilesAndDirs.DeleteFile parms.LogFilename tempFilename
 ⍝Done
