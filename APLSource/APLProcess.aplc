@@ -31,7 +31,9 @@
     ∇
 
     ∇ r←History
-      :Access Public Shared
+      :Access Public Shared  
+    ⍝ * 0.9.1 from 2025-07-23
+    ⍝   -run removed as an option
     ⍝ * 0.9.0 from 2025-07-21
     ⍝   * Potentially breaking changes since version 0.8.0
     ⍝     * The option to pass a command line string to the constructor has been removed
@@ -179,7 +181,6 @@
               cmd,←'"',ps.Exe,'" '
               :If 0<≢ps.WorkspaceName~' '
                   cmd,←' "',ps.WorkspaceName,'"'
-                  cmd,←' -run'
               :Else
                   cmd,←' +s'  ⍝ Clean start
               :EndIf
@@ -205,7 +206,7 @@
               Proc.HasExited←1
               Proc.Id←0
           :Else
-              cmd←ride,' "',ps.Exe,'"',({0=≢⍵:⍵ ⋄ ' "',⍵,'"'}ps.WorkspaceName),' +q ',((0<≢ps.WorkspaceName~' ')/'-run '),'-s -b -c '
+              cmd←ride,' "',ps.Exe,'"',({0=≢⍵:⍵ ⋄ ' "',⍵,'"'}ps.WorkspaceName),' +q -s -b -c '
               cmd,←args
               cmd,←' APLPPID=$PPID'
               :If ps.RidePort=0
