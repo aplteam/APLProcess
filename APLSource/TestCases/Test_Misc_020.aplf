@@ -1,20 +1,20 @@
  R←Test_Misc_020(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms
-⍝ Start a process with parameters "WorkspaceName" and "CommandLineArgs"
+⍝ Start a process with parameters "WorkspaceName" and a config parameter
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'
- parms.CommandLineArgs←'RC=254'
+ parms.ConfigParms⍪←'RC' '254'
 
  :If 0
      parms.SessionFile←1
-     parms.CommandLineArgs,←' -x'  ⍝ For debugging the workspace that will be run
+     parms.LX←0                     ⍝ For debugging the workspace that will be run
      parms.WindowsStyle←'Normal'
  :EndIf
 
- P←##.APLProcess.New(,⊂parms)
+ P←##.APLProcess.New parms
 
  →T.PassesIf P.ExitCode=254
 

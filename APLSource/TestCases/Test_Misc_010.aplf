@@ -1,5 +1,5 @@
  R←Test_Misc_010(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms
-⍝ Start a process with default parameters except the workspace. Waits for the process to end
+⍝ Start a process with no parameters and no options, just the workspace. Waits for the process to end.
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
@@ -7,11 +7,18 @@
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\Test.dws'
  :If 0
-     parms.CommandLineArgs←'-x'  ⍝ For debugging the workspace that will be run
+     parms.LX←0        ⍝ For debugging the workspace that will be run
  :EndIf
 
- P←##.APLProcess.New(,⊂parms)
+ P←##.APLProcess.New parms
  →T.PassesIf P.ExitCode=0
+
+ :If 'Win'≢3↑APLTreeUtils2.GetOperatingSystem ⍬
+ :AndIf 1∧.≤2↑2250⌶0        ⍝ When .NET is not available the test did already use CLI
+     parms.DontUseDotNET←1
+     P←##.APLProcess.New parms
+     →T.PassesIf P.ExitCode=0
+ :EndIf
 
  R←T._OK
 ⍝Done

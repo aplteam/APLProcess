@@ -8,15 +8,15 @@
  connectionName←'C1'
  parms←##.APLProcess.CreateParms
  parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'/Tests/RPC.dws'
- parms.CommandLineArgs,←' port=',(⍕port),' '    ⍝ The port used for communicating
+ parms.ConfigParms⍪←'port'port       ⍝ The port used for communicating
  :If 0
      parms.SessionFile←1
-     parms.CommandLineArgs,←' -x'               ⍝ For debugging the workspace that will be run
+     parms.LX←0                         ⍝ For debugging the workspace that will be run
      parms.WindowsStyle←'Normal'
  :EndIf
  parms.Wait←0
  P←##.APLProcess.New parms
- →T.PassesIf parms.CommandLineArgs≡P.Args
+ →T.PassesIf parms.ConfigParms≡P.ConfigParms
  :Trap 2
      P.WindowsStyle←'Normal'
      →T.FailsIf 1
@@ -26,7 +26,7 @@
  :EndTrap
 
  →T.PassesIf 0<≢P.Exe
- →T.PassesIf P.Args≡parms.CommandLineArgs
+ →T.PassesIf P.ConfigParms≡parms.ConfigParms
  →T.PassesIf parms.WorkspaceName≡P.WorkspaceName
  →T.PassesIf 0=P.Runtime
  →T.PassesIf 0=P.HasExited

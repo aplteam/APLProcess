@@ -1,33 +1,31 @@
- R←Test_Misc_040(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;parms;P;tempFilename
-⍝ Start a process that potentially runs forever and kill it
-⍝ We load a workspace that runs forever, and check whether it has done its job.
+ R←Test_Misc_060(stopFlag batchFlag);⎕IO;⎕ML;⎕TRAP;P;parms;tempFilename;list
+⍝ Start a process with several config parameters (including RIDE_INIT by setting RidePort) and request the list
  ⎕IO←1 ⋄ ⎕ML←1
  ⎕TRAP←(999 'C' '. ⍝ Deliberate error')(0 'N')
  R←T._Failed
 
  parms←##.APLProcess.CreateParms
- parms.Wait←0
  parms.WorkspaceName←FilesAndDirs.EnforceSlash ##.CiderConfig.HOME,'\Tests\RunForever.dws'
+ parms.RidePort←4988
+ parms.Wait←0
+ parms.ConfigParms⍪←'RC' '254'
+ parms.ConfigParms⍪←'APLProcess_WriteNames' 1
+ parms.ConfigParms⍪←'MyName' 'Kai Jaeger'
+ parms.ConfigParms⍪←'MyCode' 123456
  tempFilename←FilesAndDirs.GetTempPath,'APLProcess-Test-',⊃⎕SI
  parms.ConfigParms⍪←'file'tempFilename
 
  :If 0
      parms.SessionFile←1
+     parms.LX←0                     ⍝ For debugging the workspace that will be run
      parms.WindowsStyle←'Normal'
-     parms.LX←0
  :EndIf
 
- P←##.APLProcess.New(,⊂parms)
+ P←##.APLProcess.New parms
  {⎕NEXISTS ⍵:shy←⍬ ⋄ _←⎕DL 1 ⋄ ∇ ⍵}tempFilename             ⍝ Wait until the file appears
- →T.GoToTidyUp'I was here'{⍺≢(≢⍺)↑⍵}⊃⎕NGET tempFilename
- →T.GoToTidyUp P.GetPID≠P.Proc.Id
+ list←⊃⎕NGET tempFilename 1
  P.KillItself       ⍝ We can't really test this becausee APL might well have quit already
- →T.GoToTidyUp P.HasExited≠1
- →T.GoToTidyUp P.GetPID∊{⍵[;2]}##.OS.GetTaskList 0 0 0
- →T.GoToTidyUp'Minimized'≢P.WindowsStyle
- →T.GoToTidyUp~P.UseDotNetCore∊0 1
- →T.GoToTidyUp parms.WorkspaceName≢P.WorkspaceName
- →T.GoToTidyUp P.Runtime≠0
+ →T.GoToTidyUp~list ∆LazyMatch parms.ConfigParms[;1],(~1∧.≤2↑2250⌶0)/⊂'APLppid'
 
  R←T._OK
 
